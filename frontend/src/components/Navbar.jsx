@@ -1,0 +1,42 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import './Navbar.css';
+import reactLogo from '../assets/react.svg';
+
+const Navbar = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const { logout, isAdmin } = useAuth();
+
+    return (
+        <nav className="navbar">
+            <div className="navbar-container">
+                <Link to="/" className="navbar-logo" onClick={() => setIsOpen(false)}>
+                    <img src={reactLogo} alt="Logo" className="logo-icon" />
+                    <span className="brand-name">SynergyStack {isAdmin && <span className="admin-badge">(Admin)</span>}</span>
+                </Link>
+
+                <button 
+                    className={`menu-toggle ${isOpen ? 'active' : ''}`} 
+                    onClick={() => setIsOpen(!isOpen)}
+                    aria-label="Toggle navigation"
+                >
+                    <span className="bar"></span>
+                    <span className="bar"></span>
+                    <span className="bar"></span>
+                </button>
+
+                <ul className={`nav-links ${isOpen ? 'open' : ''}`}>
+                    <li><Link to="/home" onClick={() => setIsOpen(false)}>Home</Link></li>
+                    <li><Link to="/team-members" onClick={() => setIsOpen(false)}>Team Members</Link></li>
+                    <li><Link to="/contact" onClick={() => setIsOpen(false)}>Contact</Link></li>
+                    <li><button className="logout-btn" onClick={logout}>Logout</button></li>
+                </ul>
+            </div>
+        </nav>
+    );
+};
+
+
+export default Navbar;
+

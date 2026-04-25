@@ -1,0 +1,132 @@
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0f;
+    padding: 20px;
+}
+
+.admin-theme {
+    background: radial-gradient(circle at top right, rgba(255, 69, 58, 0.05), transparent), #050508;
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 60px 40px;
+    border-radius: 32px;
+    width: 100%;
+    max-width: 450px;
+    backdrop-filter: blur(20px);
+    text-align: center;
+}
+
+.auth-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+}
+
+.auth-subtitle {
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 40px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.auth-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+}
+
+.auth-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.auth-group input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 18px;
+    border-radius: 16px;
+    color: #fff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.auth-group input:focus {
+    outline: none;
+    border-color: #646cff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.auth-btn {
+    padding: 18px;
+    background: #646cff;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.auth-btn:hover {
+    background: #747bff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(100, 108, 255, 0.3);
+}
+
+.admin-btn {
+    background: #ff453a;
+}
+
+.admin-btn:hover {
+    background: #ff5b52;
+    box-shadow: 0 10px 20px rgba(255, 69, 58, 0.3);
+}
+
+.auth-error {
+    background: rgba(255, 69, 58, 0.1);
+    color: #ff453a;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.auth-links {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.auth-links a {
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.auth-links a:hover {
+    color: #fff;
+}
+
+.auth-success {
+    padding: 20px;
+    color: #30d158;
+    line-height: 1.6;
+}
