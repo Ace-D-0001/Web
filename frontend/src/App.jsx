@@ -8,6 +8,8 @@ import Team from './pages/Team'
 import Contact from './pages/Contact'
 import ProductDetails from './pages/ProductDetails'
 import Login from './pages/Login'
+import Signup from './pages/Signup'
+import SetPassword from './pages/SetPassword'
 import AdminLogin from './pages/AdminLogin'
 import ForgotPassword from './pages/ForgotPassword'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -40,6 +42,8 @@ function AppContent() {
       <Routes>
         {/* Auth Routes - Unprotected */}
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/set-password/:token" element={<SetPassword />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 

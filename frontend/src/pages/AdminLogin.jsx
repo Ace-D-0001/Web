@@ -4,18 +4,24 @@ import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 const AdminLogin = () => {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const { adminLogin } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (adminLogin(username, password)) {
+        setLoading(true);
+        setError('');
+
+        const result = await adminLogin(email, password);
+        if (result.success) {
             navigate('/');
         } else {
-            setError('Invalid Admin credentials');
+            setError(result.message);
+            setLoading(false);
         }
     };
 
@@ -28,13 +34,14 @@ const AdminLogin = () => {
                 <form className="auth-form" onSubmit={handleSubmit}>
                     {error && <div className="auth-error">{error}</div>}
                     <div className="auth-group">
-                        <label>Admin Username</label>
+                        <label>Admin Email</label>
                         <input 
-                            type="text" 
-                            value={username} 
-                            onChange={(e) => setUsername(e.target.value)} 
-                            placeholder="admin"
+                            type="email" 
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)} 
+                            placeholder="admin@example.com"
                             required 
+                            disabled={loading}
                         />
                     </div>
                     <div className="auth-group">
@@ -43,11 +50,14 @@ const AdminLogin = () => {
                             type="password" 
                             value={password} 
                             onChange={(e) => setPassword(e.target.value)} 
-                            placeholder="admin123"
+                            placeholder="••••••••"
                             required 
+                            disabled={loading}
                         />
                     </div>
-                    <button type="submit" className="auth-btn admin-btn">Access Dashboard</button>
+                    <button type="submit" className="auth-btn admin-btn" disabled={loading}>
+                        {loading ? 'Accessing...' : 'Access Dashboard'}
+                    </button>
                 </form>
 
                 <div className="auth-links">

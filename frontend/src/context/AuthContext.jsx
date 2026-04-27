@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
@@ -10,33 +11,56 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         const storedAdmin = localStorage.getItem('isAdmin');
-        if (storedUser) {
-            setUser(storedUser);
+        const token = localStorage.getItem('token');
+        
+        if (storedUser && token) {
+            setUser(JSON.parse(storedUser));
             setIsAdmin(storedAdmin === 'true');
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         }
         setLoading(false);
     }, []);
 
-    const login = (username, password) => {
-        if (username === 'usger' && password === 'password') {
-            setUser(username);
-            setIsAdmin(false);
-            localStorage.setItem('user', username);
-            localStorage.setItem('isAdmin', 'false');
-            return true;
+    const login = async (email, password) => {
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/login`, { email, password });
+            const { user, token } = response.data;
+            
+            setUser(user);
+            setIsAdmin(user.role === 'admin');
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('isAdmin', user.role === 'admin' ? 'true' : 'false');
+            localStorage.setItem('token', token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            
+            return { success: true };
+        } catch (error) {
+            return { 
+                success: false, 
+                message: error.response?.data?.message || 'Login failed' 
+            };
         }
-        return false;
     };
 
-    const adminLogin = (username, password) => {
-        if (username === 'admin' && password === 'admin123') {
-            setUser(username);
+    const adminLogin = async (email, password) => {
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/admin/login`, { email, password });
+            const { user, token } = response.data;
+            
+            setUser(user);
             setIsAdmin(true);
-            localStorage.setItem('user', username);
+            localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('isAdmin', 'true');
-            return true;
+            localStorage.setItem('token', token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            
+            return { success: true };
+        } catch (error) {
+            return { 
+                success: false, 
+                message: error.response?.data?.message || 'Admin login failed' 
+            };
         }
-        return false;
     };
 
     const logout = () => {
@@ -44,6 +68,8 @@ export const AuthProvider = ({ children }) => {
         setIsAdmin(false);
         localStorage.removeItem('user');
         localStorage.removeItem('isAdmin');
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
     };
 
     return (

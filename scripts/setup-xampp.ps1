@@ -37,6 +37,33 @@ if (-not (Test-Path $envPath)) {
     Copy-Item $envExamplePath $envPath -Force
 }
 
+function Set-EnvValue {
+    param(
+        [string]$Path,
+        [string]$Name,
+        [string]$Value
+    )
+
+    $content = Get-Content $Path
+    $pattern = "^$([regex]::Escape($Name))=.*$"
+    $replacement = "$Name=$Value"
+
+    if ($content -match $pattern) {
+        $content = $content -replace $pattern, $replacement
+    } else {
+        $content += $replacement
+    }
+
+    Set-Content -Path $Path -Value $content
+}
+
+Set-EnvValue -Path $envPath -Name "DB_CONNECTION" -Value "mysql"
+Set-EnvValue -Path $envPath -Name "DB_HOST" -Value "127.0.0.1"
+Set-EnvValue -Path $envPath -Name "DB_PORT" -Value "3306"
+Set-EnvValue -Path $envPath -Name "DB_DATABASE" -Value "laravel_react_db"
+Set-EnvValue -Path $envPath -Name "DB_USERNAME" -Value "root"
+Set-EnvValue -Path $envPath -Name "DB_PASSWORD" -Value ""
+
 Write-Output "Generating Laravel app key..."
 & $phpExe artisan key:generate
 

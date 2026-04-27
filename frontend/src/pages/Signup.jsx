@@ -1,26 +1,27 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import './Login.css';
 
-const Login = () => {
+const Signup = () => {
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth();
-    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setMessage('');
         setError('');
-        
-        const result = await login(email, password);
-        if (result.success) {
-            navigate('/');
-        } else {
-            setError(result.message);
+
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/signup`, { email });
+            setMessage(response.data.message);
+            setEmail('');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Something went wrong. Please try again.');
+        } finally {
             setLoading(false);
         }
     };
@@ -28,11 +29,13 @@ const Login = () => {
     return (
         <div className="auth-page">
             <div className="auth-card">
-                <h1 className="auth-title">User Login</h1>
-                <p className="auth-subtitle">Welcome back to SynergyStack</p>
+                <h1 className="auth-title">Create Account</h1>
+                <p className="auth-subtitle">Enter your Gmail to receive a verification link</p>
                 
                 <form className="auth-form" onSubmit={handleSubmit}>
                     {error && <div className="auth-error">{error}</div>}
+                    {message && <div className="auth-success" style={{ color: '#28a745', marginBottom: '15px', textAlign: 'center' }}>{message}</div>}
+                    
                     <div className="auth-group">
                         <label>Email Address</label>
                         <input 
@@ -44,30 +47,18 @@ const Login = () => {
                             disabled={loading}
                         />
                     </div>
-                    <div className="auth-group">
-                        <label>Password</label>
-                        <input 
-                            type="password" 
-                            value={password} 
-                            onChange={(e) => setPassword(e.target.value)} 
-                            placeholder="password"
-                            required 
-                            disabled={loading}
-                        />
-                    </div>
+                    
                     <button type="submit" className="auth-btn" disabled={loading}>
-                        {loading ? 'Logging in...' : 'Login'}
+                        {loading ? 'Sending link...' : 'Send Verification Link'}
                     </button>
                 </form>
 
                 <div className="auth-links">
-                    <Link to="/signup">Don't have an account? Signup</Link>
-                    <Link to="/forgot-password">Forgot Password?</Link>
-                    <Link to="/admin-login">Admin Access</Link>
+                    <Link to="/login">Already have an account? Login</Link>
                 </div>
             </div>
         </div>
     );
 };
 
-export default Login;
+export default Signup;

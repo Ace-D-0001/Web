@@ -20,6 +20,7 @@ What the script does:
 - Installs frontend npm packages
 - Installs backend npm packages
 - Creates backend/.env if missing
+- Rewrites backend database values to match XAMPP defaults
 - Generates Laravel app key via C:\xampp\php\php.exe
 - Creates MySQL database laravel_react_db via C:\xampp\mysql\bin\mysql.exe
 - Runs Laravel migrations
@@ -73,3 +74,11 @@ npm run dev
 ```
 
 If MySQL is not running, start it from XAMPP Control Panel, then run the DB commands above.
+
+## XAMPP Checklist
+
+Before running the app, make sure these XAMPP pieces are available:
+
+- Apache running if you want to serve the backend through XAMPP tools
+- MySQL running from XAMPP Control Panel
+- PHP available at `C:\xampp\php\php.exe`
