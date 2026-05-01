@@ -99,6 +99,19 @@ const UsersSection = () => {
         fetchUsers();
     };
 
+    const toggleRole = async (id, currentRole) => {
+        const newRole = currentRole === 'admin' ? 'user' : 'admin';
+        await axios.post(`${import.meta.env.VITE_API_URL}/admin/users/${id}/role`, { role: newRole });
+        fetchUsers();
+    };
+
+    const deleteUser = async (id) => {
+        if (window.confirm('Are you sure you want to delete this user?')) {
+            await axios.delete(`${import.meta.env.VITE_API_URL}/admin/users/${id}`);
+            fetchUsers();
+        }
+    };
+
     return (
         <div className="section">
             <header className="content-header">
@@ -112,6 +125,7 @@ const UsersSection = () => {
                             <th>Email</th>
                             <th>Role</th>
                             <th>Status</th>
+                            <th>Joined</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -125,13 +139,24 @@ const UsersSection = () => {
                                     </div>
                                 </td>
                                 <td>{u.email}</td>
-                                <td><span className={`badge badge-admin`}>{u.role}</span></td>
+                                <td>
+                                    <button 
+                                        className={`badge badge-admin`} 
+                                        onClick={() => toggleRole(u.id, u.role)}
+                                        style={{ cursor: 'pointer', border: 'none' }}
+                                        title="Click to toggle role"
+                                    >
+                                        {u.role}
+                                    </button>
+                                </td>
                                 <td><span className={`badge badge-${u.status}`}>{u.status}</span></td>
+                                <td>{new Date(u.created_at).toLocaleDateString()}</td>
                                 <td>
                                     <div style={{ display: 'flex', gap: '5px' }}>
-                                        <button className="action-btn" onClick={() => updateStatus(u.id, 'active')}>Approve</button>
-                                        <button className="action-btn" onClick={() => updateStatus(u.id, 'rejected')}>Reject</button>
-                                        <button className="action-btn" onClick={() => updateStatus(u.id, 'pending')}>Pending</button>
+                                        <button className="action-btn" onClick={() => updateStatus(u.id, 'active')} title="Approve">✅</button>
+                                        <button className="action-btn" onClick={() => updateStatus(u.id, 'rejected')} title="Reject">❌</button>
+                                        <button className="action-btn" onClick={() => updateStatus(u.id, 'pending')} title="Set Pending">⏳</button>
+                                        <button className="action-btn" onClick={() => deleteUser(u.id)} title="Delete" style={{ color: '#ef4444' }}>🗑️</button>
                                     </div>
                                 </td>
                             </tr>
