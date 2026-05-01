@@ -171,7 +171,14 @@ const UsersSection = () => {
 const CardsSection = () => {
     const [products, setProducts] = useState([]);
     const [showModal, setShowModal] = useState(false);
-    const [currentCard, setCurrentCard] = useState({ title: '', description: '', image_url: '' });
+    const [currentCard, setCurrentCard] = useState({ 
+        title: '', 
+        price: '', 
+        description: '', 
+        image_url: '', 
+        gallery: [], 
+        specs: [] 
+    });
 
     useEffect(() => { fetchCards(); }, []);
 
@@ -182,10 +189,16 @@ const CardsSection = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
+        const payload = {
+            ...currentCard,
+            gallery: typeof currentCard.gallery === 'string' ? currentCard.gallery.split(',').map(s => s.trim()).filter(s => s) : currentCard.gallery,
+            specs: typeof currentCard.specs === 'string' ? currentCard.specs.split('\n').map(s => s.trim()).filter(s => s) : currentCard.specs
+        };
+
         if (currentCard.id) {
-            await axios.put(`${import.meta.env.VITE_API_URL}/admin/products/${currentCard.id}`, currentCard);
+            await axios.put(`${import.meta.env.VITE_API_URL}/admin/products/${currentCard.id}`, payload);
         } else {
-            await axios.post(`${import.meta.env.VITE_API_URL}/admin/products`, currentCard);
+            await axios.post(`${import.meta.env.VITE_API_URL}/admin/products`, payload);
         }
         setShowModal(false);
         fetchCards();
@@ -207,7 +220,10 @@ const CardsSection = () => {
         <div className="section">
             <header className="content-header">
                 <h1>Product/Service Cards</h1>
-                <button className="action-btn btn-primary" onClick={() => { setCurrentCard({ title: '', description: '', image_url: '' }); setShowModal(true); }}>
+                <button className="action-btn btn-primary" onClick={() => { 
+                    setCurrentCard({ title: '', price: '', description: '', image_url: '', gallery: '', specs: '' }); 
+                    setShowModal(true); 
+                }}>
                     + Add New Card
                 </button>
             </header>
@@ -218,9 +234,17 @@ const CardsSection = () => {
                         <img src={p.image_url || 'https://via.placeholder.com/300x180?text=No+Image'} className="card-img-preview" />
                         <div className="card-body">
                             <h3>{p.title}</h3>
+                            <p style={{ color: 'var(--admin-primary)', fontWeight: '600' }}>{p.price || 'N/A'}</p>
                             <p style={{ color: 'var(--admin-text-dim)', fontSize: '0.9rem', margin: '8px 0' }}>{p.description}</p>
                             <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-                                <button className="action-btn" onClick={() => { setCurrentCard(p); setShowModal(true); }}>Edit</button>
+                                <button className="action-btn" onClick={() => { 
+                                    setCurrentCard({
+                                        ...p,
+                                        gallery: p.gallery ? p.gallery.join(', ') : '',
+                                        specs: p.specs ? p.specs.join('\n') : ''
+                                    }); 
+                                    setShowModal(true); 
+                                }}>Edit</button>
                                 <button className="action-btn" onClick={() => togglePause(p.id)}>{p.is_paused ? '▶️ Resume' : '⏸️ Pause'}</button>
                                 <button className="action-btn" onClick={() => deleteCard(p.id)} style={{ color: '#ef4444' }}>🗑️</button>
                             </div>
@@ -231,20 +255,34 @@ const CardsSection = () => {
 
             {showModal && (
                 <div className="modal-overlay">
-                    <div className="admin-modal">
+                    <div className="admin-modal" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
                         <h2>{currentCard.id ? 'Edit Card' : 'Create New Card'}</h2>
                         <form onSubmit={handleSave}>
-                            <div className="form-group">
-                                <label>Title</label>
-                                <input className="form-control" value={currentCard.title} onChange={e => setCurrentCard({...currentCard, title: e.target.value})} required />
+                            <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                                <div className="form-group">
+                                    <label>Title</label>
+                                    <input className="form-control" value={currentCard.title} onChange={e => setCurrentCard({...currentCard, title: e.target.value})} required />
+                                </div>
+                                <div className="form-group">
+                                    <label>Price (e.g. $299)</label>
+                                    <input className="form-control" value={currentCard.price} onChange={e => setCurrentCard({...currentCard, price: e.target.value})} />
+                                </div>
                             </div>
                             <div className="form-group">
-                                <label>Image URL</label>
+                                <label>Main Image URL</label>
                                 <input className="form-control" value={currentCard.image_url} onChange={e => setCurrentCard({...currentCard, image_url: e.target.value})} />
                             </div>
                             <div className="form-group">
+                                <label>Gallery Images (Comma separated URLs)</label>
+                                <textarea className="form-control" rows="2" value={currentCard.gallery} onChange={e => setCurrentCard({...currentCard, gallery: e.target.value})} placeholder="url1, url2, url3" />
+                            </div>
+                            <div className="form-group">
                                 <label>Description</label>
-                                <textarea className="form-control" rows="4" value={currentCard.description} onChange={e => setCurrentCard({...currentCard, description: e.target.value})} />
+                                <textarea className="form-control" rows="3" value={currentCard.description} onChange={e => setCurrentCard({...currentCard, description: e.target.value})} />
+                            </div>
+                            <div className="form-group">
+                                <label>Specifications (One per line)</label>
+                                <textarea className="form-control" rows="4" value={currentCard.specs} onChange={e => setCurrentCard({...currentCard, specs: e.target.value})} placeholder="16GB RAM&#10;2TB SSD" />
                             </div>
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <button type="submit" className="action-btn btn-primary">Save Changes</button>

@@ -63,15 +63,41 @@ const ProductDetails = () => {
             }}>
                 <div className="banner-content">
                     <h1 className="banner-title">{product.title}</h1>
-                    <p className="banner-price">Contact for pricing</p>
+                    <p className="banner-price">{product.price || 'Contact for pricing'}</p>
                 </div>
             </div>
 
             <div className="details-container">
+                {product.gallery && product.gallery.length > 0 && (
+                    <section className="gallery-section">
+                        <h2 className="section-title">Product Gallery</h2>
+                        <div className="gallery-grid">
+                            {product.gallery.map((img, index) => (
+                                <div key={index} className="gallery-item">
+                                    <img src={img} alt={`Gallery ${index}`} />
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
                 <section className="info-section" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
-                    <div className="description-part">
-                        <h2 className="section-title">Description</h2>
-                        <p className="product-description">{product.description}</p>
+                    <div className="description-and-specs">
+                        <div className="description-part">
+                            <h2 className="section-title">Description</h2>
+                            <p className="product-description">{product.description}</p>
+                        </div>
+
+                        {product.specs && product.specs.length > 0 && (
+                            <div className="specs-part" style={{ marginTop: '30px' }}>
+                                <h2 className="section-title">Specifications</h2>
+                                <ul className="specs-list">
+                                    {product.specs.map((spec, index) => (
+                                        <li key={index}>{spec}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
 
                     <div className="action-part" style={{ background: 'rgba(255,255,255,0.03)', padding: '30px', borderRadius: '12px' }}>

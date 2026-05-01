@@ -17,8 +17,11 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'price' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'image_url' => 'nullable|string',
+            'gallery' => 'nullable|array',
+            'specs' => 'nullable|array',
             'is_paused' => 'boolean'
         ]);
 
@@ -32,8 +35,11 @@ class ProductController extends Controller
         
         $validated = $request->validate([
             'title' => 'string|max:255',
+            'price' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'image_url' => 'nullable|string',
+            'gallery' => 'nullable|array',
+            'specs' => 'nullable|array',
             'is_paused' => 'boolean'
         ]);
 

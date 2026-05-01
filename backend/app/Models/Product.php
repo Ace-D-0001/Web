@@ -11,13 +11,18 @@ class Product extends Model
 
     protected $fillable = [
         'title',
+        'price',
         'description',
         'image_url',
+        'gallery',
+        'specs',
         'is_paused',
     ];
 
     protected $casts = [
         'is_paused' => 'boolean',
+        'gallery' => 'json',
+        'specs' => 'json',
     ];
 
     public function inquiries()
