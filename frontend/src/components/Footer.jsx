@@ -3,7 +3,13 @@ import axios from 'axios';
 import './Footer.css';
 
 const Footer = () => {
-    const [copyright, setCopyright] = useState('SynergyStack. All rights reserved.');
+    const [config, setConfig] = useState({
+        brand: 'SynergyStack',
+        about_text: 'Building the future of full-stack development with React and Laravel.',
+        copyright: 'SynergyStack. All rights reserved.',
+        contact: { email: 'info@synergystack.com', phone: '+1 (555) 000-0000', address: '123 Tech Avenue, CA' },
+        social: { facebook: '#', twitter: '#', linkedin: '#', instagram: '#' }
+    });
 
     useEffect(() => {
         fetchFooterSettings();
@@ -12,7 +18,7 @@ const Footer = () => {
     const fetchFooterSettings = async () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_API_URL}/settings/footer_config`);
-            if (res.data?.copyright) setCopyright(res.data.copyright);
+            if (res.data) setConfig(prev => ({ ...prev, ...res.data }));
         } catch (err) {
             console.error('Footer config fetch failed');
         }
@@ -22,34 +28,30 @@ const Footer = () => {
         <footer className="footer">
             <div className="footer-container">
                 <div className="footer-section about">
-                    <h3 className="footer-title">SynergyStack</h3>
-                    <p className="footer-text">
-                        Building the future of full-stack development with React and Laravel. 
-                        Premium solutions for modern digital challenges.
-                    </p>
+                    <h3 className="footer-title">{config.brand}</h3>
+                    <p className="footer-text">{config.about_text}</p>
                     <div className="social-links">
-                        <a href="#" className="social-icon" aria-label="Facebook">FB</a>
-                        <a href="#" className="social-icon" aria-label="Twitter">TW</a>
-                        <a href="#" className="social-icon" aria-label="LinkedIn">LI</a>
-                        <a href="#" className="social-icon" aria-label="Instagram">IG</a>
+                        {config.social?.facebook && <a href={config.social.facebook} className="social-icon">FB</a>}
+                        {config.social?.twitter && <a href={config.social.twitter} className="social-icon">TW</a>}
+                        {config.social?.linkedin && <a href={config.social.linkedin} className="social-icon">LI</a>}
+                        {config.social?.instagram && <a href={config.social.instagram} className="social-icon">IG</a>}
                     </div>
                 </div>
 
                 <div className="footer-section links">
                     <h3 className="footer-title">Quick Links</h3>
                     <ul>
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#team-members">Team Members</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                        <li><a href="#privacy">Privacy Policy</a></li>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/contact">Contact</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
                     </ul>
                 </div>
 
                 <div className="footer-section contact-info">
                     <h3 className="footer-title">Contact Us</h3>
-                    <p className="footer-text">Email: info@synergystack.com</p>
-                    <p className="footer-text">Phone: +1 (555) 000-0000</p>
-                    <p className="footer-text">Address: 123 Tech Avenue, Silicon Valley, CA</p>
+                    <p className="footer-text">Email: {config.contact?.email}</p>
+                    <p className="footer-text">Phone: {config.contact?.phone}</p>
+                    <p className="footer-text">Address: {config.contact?.address}</p>
                 </div>
 
                 <div className="footer-section map">
@@ -68,7 +70,7 @@ const Footer = () => {
                 </div>
             </div>
             <div className="footer-bottom">
-                <p>&copy; {new Date().getFullYear()} {copyright}</p>
+                <p>&copy; {new Date().getFullYear()} {config.copyright}</p>
             </div>
         </footer>
     );

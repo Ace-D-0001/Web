@@ -346,8 +346,14 @@ const MessagesSection = () => {
 
 const SettingsSection = () => {
     const [settings, setSettings] = useState({ 
-        navbar: { brand: 'Nusrat', links: [] }, 
-        footer: { copyright: '© 2026', text: '' } 
+        navbar: { brand: 'Nusrat', logo_url: '', links: [{label: 'Home', path: '/'}, {label: 'Contact', path: '/contact'}] }, 
+        footer: { 
+            brand: 'Nusrat', 
+            about_text: 'Building the future...', 
+            copyright: '© 2026', 
+            contact: { email: '', phone: '', address: '' },
+            social: { facebook: '', twitter: '', linkedin: '', instagram: '' }
+        } 
     });
 
     useEffect(() => { fetchSettings(); }, []);
@@ -370,23 +376,74 @@ const SettingsSection = () => {
             </header>
             
             <div className="stats-grid">
-                <div className="stat-card">
-                    <h3>Navbar Customization</h3>
+                {/* Navbar Settings */}
+                <div className="stat-card" style={{ gridColumn: 'span 1' }}>
+                    <h3>Navbar Settings</h3>
                     <div className="form-group" style={{ marginTop: '20px' }}>
                         <label>Brand Name</label>
                         <input className="form-control" value={settings.navbar.brand} onChange={e => setSettings({...settings, navbar: {...settings.navbar, brand: e.target.value}})} />
                     </div>
-                    <button className="action-btn btn-primary" onClick={() => saveSettings('navbar_config', settings.navbar)}>Update Navbar</button>
+                    <div className="form-group">
+                        <label>Logo URL</label>
+                        <input className="form-control" value={settings.navbar.logo_url} onChange={e => setSettings({...settings, navbar: {...settings.navbar, logo_url: e.target.value}})} placeholder="https://..." />
+                    </div>
+                    <button className="action-btn btn-primary" onClick={() => saveSettings('navbar_config', settings.navbar)}>Save Navbar</button>
                 </div>
 
+                {/* Footer General */}
                 <div className="stat-card">
-                    <h3>Footer Customization</h3>
+                    <h3>Footer Content</h3>
                     <div className="form-group" style={{ marginTop: '20px' }}>
+                        <label>Footer Brand</label>
+                        <input className="form-control" value={settings.footer.brand} onChange={e => setSettings({...settings, footer: {...settings.footer, brand: e.target.value}})} />
+                    </div>
+                    <div className="form-group">
+                        <label>About Text</label>
+                        <textarea className="form-control" rows="3" value={settings.footer.about_text} onChange={e => setSettings({...settings, footer: {...settings.footer, about_text: e.target.value}})} />
+                    </div>
+                    <div className="form-group">
                         <label>Copyright Text</label>
                         <input className="form-control" value={settings.footer.copyright} onChange={e => setSettings({...settings, footer: {...settings.footer, copyright: e.target.value}})} />
                     </div>
-                    <button className="action-btn btn-primary" onClick={() => saveSettings('footer_config', settings.footer)}>Update Footer</button>
                 </div>
+
+                {/* Footer Contact */}
+                <div className="stat-card">
+                    <h3>Contact Information</h3>
+                    <div className="form-group" style={{ marginTop: '20px' }}>
+                        <label>Email</label>
+                        <input className="form-control" value={settings.footer.contact?.email} onChange={e => setSettings({...settings, footer: {...settings.footer, contact: {...settings.footer.contact, email: e.target.value}}})} />
+                    </div>
+                    <div className="form-group">
+                        <label>Phone</label>
+                        <input className="form-control" value={settings.footer.contact?.phone} onChange={e => setSettings({...settings, footer: {...settings.footer, contact: {...settings.footer.contact, phone: e.target.value}}})} />
+                    </div>
+                    <div className="form-group">
+                        <label>Address</label>
+                        <input className="form-control" value={settings.footer.contact?.address} onChange={e => setSettings({...settings, footer: {...settings.footer, contact: {...settings.footer.contact, address: e.target.value}}})} />
+                    </div>
+                </div>
+
+                {/* Social Links */}
+                <div className="stat-card">
+                    <h3>Social Media Links</h3>
+                    <div className="form-group" style={{ marginTop: '20px' }}>
+                        <label>Facebook</label>
+                        <input className="form-control" value={settings.footer.social?.facebook} onChange={e => setSettings({...settings, footer: {...settings.footer, social: {...settings.footer.social, facebook: e.target.value}}})} />
+                    </div>
+                    <div className="form-group">
+                        <label>Twitter</label>
+                        <input className="form-control" value={settings.footer.social?.twitter} onChange={e => setSettings({...settings, footer: {...settings.footer, social: {...settings.footer.social, twitter: e.target.value}}})} />
+                    </div>
+                    <div className="form-group">
+                        <label>Instagram</label>
+                        <input className="form-control" value={settings.footer.social?.instagram} onChange={e => setSettings({...settings, footer: {...settings.footer, social: {...settings.footer.social, instagram: e.target.value}}})} />
+                    </div>
+                </div>
+            </div>
+            
+            <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                <button className="action-btn btn-primary" style={{ padding: '15px 30px' }} onClick={() => saveSettings('footer_config', settings.footer)}>Save All Footer Settings</button>
             </div>
         </div>
     );
