@@ -1,12 +1,29 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import HeroSlider from '../components/HeroSlider';
 import Card from '../components/Card';
 import './Home.css';
 
-import product1 from '../assets/product1.png';
-import product2 from '../assets/product2.png';
-import product3 from '../assets/product3.png';
-
 const Home = () => {
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    const fetchProducts = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/products`);
+            // Filter out paused products for the public view
+            setProducts(res.data.filter(p => !p.is_paused));
+            setLoading(false);
+        } catch (err) {
+            console.error('Failed to fetch products');
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="home-page">
             <HeroSlider />
@@ -19,27 +36,27 @@ const Home = () => {
                         <div className="section-divider"></div>
                     </div>
                     
-                    <div className="cards-grid">
-                        <Card 
-                            id="synergy-pro"
-                            title="Synergy Pro Workstation" 
-                            description="Unleash your potential with our flagship developer workstation, optimized for React and Laravel performance."
-                            image={product1}
-                        />
-                        <Card 
-                            id="cloud-link"
-                            title="Cloud-Link Hub" 
-                            description="Seamlessly interconnect your local environment with global cloud infrastructure using our secure hub."
-                            image={product2}
-                        />
-                        <Card 
-                            id="secure-node"
-                            title="Secure-Node v2" 
-                            description="Hardware-level encryption for your local databases, ensuring your SQL data stays private and safe."
-                            image={product3}
-                        />
-                    </div>
-
+                    {loading ? (
+                        <div style={{ textAlign: 'center', padding: '40px' }}>Loading products...</div>
+                    ) : (
+                        <div className="cards-grid">
+                            {products.length > 0 ? (
+                                products.map(p => (
+                                    <Card 
+                                        key={p.id}
+                                        id={p.id}
+                                        title={p.title} 
+                                        description={p.description}
+                                        image={p.image_url || 'https://via.placeholder.com/300'}
+                                    />
+                                ))
+                            ) : (
+                                <div style={{ textAlign: 'center', width: '100%', color: 'var(--text-dim)' }}>
+                                    No products available at the moment.
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </section>
         </div>

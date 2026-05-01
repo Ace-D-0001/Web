@@ -1,6 +1,23 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import './Footer.css';
 
 const Footer = () => {
+    const [copyright, setCopyright] = useState('SynergyStack. All rights reserved.');
+
+    useEffect(() => {
+        fetchFooterSettings();
+    }, []);
+
+    const fetchFooterSettings = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/settings/footer_config`);
+            if (res.data?.copyright) setCopyright(res.data.copyright);
+        } catch (err) {
+            console.error('Footer config fetch failed');
+        }
+    };
+
     return (
         <footer className="footer">
             <div className="footer-container">
@@ -51,7 +68,7 @@ const Footer = () => {
                 </div>
             </div>
             <div className="footer-bottom">
-                <p>&copy; {new Date().getFullYear()} SynergyStack. All rights reserved.</p>
+                <p>&copy; {new Date().getFullYear()} {copyright}</p>
             </div>
         </footer>
     );

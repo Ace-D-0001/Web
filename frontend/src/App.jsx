@@ -9,10 +9,14 @@ import Contact from './pages/Contact'
 import ProductDetails from './pages/ProductDetails'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import VerifyOTP from './pages/VerifyOTP'
 import SetPassword from './pages/SetPassword'
+import ResetPassword from './pages/ResetPassword'
 import AdminLogin from './pages/AdminLogin'
+import AdminDashboard from './pages/AdminDashboard'
 import ForgotPassword from './pages/ForgotPassword'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
 import { AuthProvider } from './context/AuthContext'
 import './App.css'
 
@@ -43,9 +47,18 @@ function AppContent() {
         {/* Auth Routes - Unprotected */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/set-password/:token" element={<SetPassword />} />
+        <Route path="/verify-otp" element={<VerifyOTP />} />
+        <Route path="/set-password" element={<SetPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* Admin Dashboard */}
+        <Route path="/admin-dashboard" element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        } />
 
         {/* Protected Website Routes */}
         <Route path="/*" element={

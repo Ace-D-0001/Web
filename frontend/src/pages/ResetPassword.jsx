@@ -3,23 +3,24 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './Login.css';
 
-const SetPassword = () => {
+const ResetPassword = () => {
     const [password, setPassword] = useState('');
-    const [passwordConfirmation, setPasswordConfirmation] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
     const email = location.state?.email;
+    const otp = location.state?.otp;
 
     useEffect(() => {
-        if (!email) navigate('/signup');
-    }, [email, navigate]);
+        if (!email || !otp) navigate('/forgot-password');
+    }, [email, otp, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (password !== passwordConfirmation) {
+        if (password !== confirmPassword) {
             setError('Passwords do not match.');
             return;
         }
@@ -27,12 +28,13 @@ const SetPassword = () => {
         setError('');
 
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL}/set-password`, {
+            await axios.post(`${import.meta.env.VITE_API_URL}/reset-password`, {
                 email,
+                otp,
                 password,
-                password_confirmation: passwordConfirmation,
+                password_confirmation: confirmPassword,
             });
-            navigate('/login', { state: { message: '✅ Account activated! You can now login.' } });
+            navigate('/login', { state: { message: '✅ Password reset successful! Please login.' } });
         } catch (err) {
             setError(err.response?.data?.message || 'Something went wrong.');
             setLoading(false);
@@ -42,8 +44,8 @@ const SetPassword = () => {
     return (
         <div className="auth-page">
             <div className="auth-card">
-                <h1 className="auth-title">Set Password</h1>
-                <p className="auth-subtitle">Choose a secure password to activate your account</p>
+                <h1 className="auth-title">Reset Password</h1>
+                <p className="auth-subtitle">Enter your new password below</p>
 
                 {error && <div className="auth-error">{error}</div>}
 
@@ -65,8 +67,8 @@ const SetPassword = () => {
                         <label>Confirm Password</label>
                         <input
                             type="password"
-                            value={passwordConfirmation}
-                            onChange={(e) => setPasswordConfirmation(e.target.value)}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="Repeat your password"
                             required
                             disabled={loading}
@@ -74,7 +76,7 @@ const SetPassword = () => {
                     </div>
 
                     <button type="submit" className="auth-btn" disabled={loading}>
-                        {loading ? 'Activating...' : 'Activate Account'}
+                        {loading ? 'Resetting...' : 'Reset Password'}
                     </button>
                 </form>
             </div>
@@ -82,4 +84,4 @@ const SetPassword = () => {
     );
 };
 
-export default SetPassword;
+export default ResetPassword;

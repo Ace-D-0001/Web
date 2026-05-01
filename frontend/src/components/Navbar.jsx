@@ -1,19 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import './Navbar.css';
 import reactLogo from '../assets/react.svg';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const [brandName, setBrandName] = useState('SynergyStack');
     const { logout, isAdmin } = useAuth();
+
+    useEffect(() => {
+        fetchNavbarSettings();
+    }, []);
+
+    const fetchNavbarSettings = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/settings/navbar_config`);
+            if (res.data?.brand) setBrandName(res.data.brand);
+        } catch (err) {
+            console.error('Navbar config fetch failed');
+        }
+    };
 
     return (
         <nav className="navbar">
             <div className="navbar-container">
                 <Link to="/" className="navbar-logo" onClick={() => setIsOpen(false)}>
                     <img src={reactLogo} alt="Logo" className="logo-icon" />
-                    <span className="brand-name">SynergyStack {isAdmin && <span className="admin-badge">(Admin)</span>}</span>
+                    <span className="brand-name">{brandName} {isAdmin && <span className="admin-badge">(Admin)</span>}</span>
                 </Link>
 
                 <button 

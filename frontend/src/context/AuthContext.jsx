@@ -63,17 +63,39 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const logout = () => {
-        setUser(null);
-        setIsAdmin(false);
-        localStorage.removeItem('user');
-        localStorage.removeItem('isAdmin');
-        localStorage.removeItem('token');
-        delete axios.defaults.headers.common['Authorization'];
+    const logout = async () => {
+        try {
+            await axios.post(`${import.meta.env.VITE_API_URL}/logout`);
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setUser(null);
+            setIsAdmin(false);
+            localStorage.removeItem('user');
+            localStorage.removeItem('isAdmin');
+            localStorage.removeItem('token');
+            delete axios.defaults.headers.common['Authorization'];
+        }
+    };
+
+    const setToken = async (token) => {
+        localStorage.setItem('token', token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        // Optionally fetch user data here
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`);
+            const user = response.data;
+            setUser(user);
+            setIsAdmin(user.role === 'admin');
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('isAdmin', user.role === 'admin' ? 'true' : 'false');
+        } catch (error) {
+            logout();
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, isAdmin, login, adminLogin, logout, loading }}>
+        <AuthContext.Provider value={{ user, isAdmin, login, adminLogin, logout, loading, setToken }}>
             {children}
         </AuthContext.Provider>
     );

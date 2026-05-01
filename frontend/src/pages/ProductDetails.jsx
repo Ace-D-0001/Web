@@ -1,106 +1,103 @@
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import './ProductDetails.css';
-
-// Assets
-import product1 from '../assets/product1.png';
-import product2 from '../assets/product2.png';
-import product3 from '../assets/product3.png';
-import gal1 from '../assets/gal1.png';
-import gal2 from '../assets/gal2.png';
-import gal3 from '../assets/gal3.png';
-import gal4 from '../assets/gal4.png';
-
-const productData = {
-    'synergy-pro': {
-        title: 'Synergy Pro Workstation',
-        price: '$2,999 (Negotiable)',
-        banner: product1,
-        gallery: [gal1, gal4, product1, gal2],
-        details: 'The Synergy Pro is a beast of a machine, designed for developers who demand the best. Featuring a liquid-cooled architecture and optimized for React/Laravel compilation, it reduces build times by up to 60%.',
-        specs: [
-            'Processor: 16-Core Ultra-Thread',
-            'RAM: 64GB DDR5 @ 6000MHz',
-            'Storage: 2TB NVMe Gen5 SSD',
-            'Display: 16-inch 4K OLED HDR'
-        ]
-    },
-    'cloud-link': {
-        title: 'Cloud-Link Hub',
-        price: '$450 (Volume Discounts Available)',
-        banner: product2,
-        gallery: [gal2, gal4, product2, gal1],
-        details: 'Connect your local development environment to the global cloud with zero latency. The Cloud-Link Hub features hardware-level synchronization for git repositories and real-time database mirroring.',
-        specs: [
-            'Connectivity: 10Gbps Fiber-Ready',
-            'Latency: < 1ms Local-to-Cloud',
-            'Security: Hardware Firewall Built-in',
-            'Ports: 8x Thunderbolt 5'
-        ]
-    },
-    'secure-node': {
-        title: 'Secure-Node v2',
-        price: 'Contact for Quote',
-        banner: product3,
-        gallery: [gal3, gal4, product3, gal2],
-        details: 'The ultimate security for your SQL databases. Secure-Node v2 provides physical encryption keys that must be present to access sensitive data clusters. Ideal for fintech and high-privacy applications.',
-        specs: [
-            'Encryption: AES-512 Hardware-Level',
-            'Authentication: Multi-Factor Biometric',
-            'Tamper-Proof: Self-Destruct Circuitry',
-            'Interface: USB-C & Bluetooth 5.4'
-        ]
-    }
-};
 
 const ProductDetails = () => {
     const { id } = useParams();
-    const product = productData[id] || productData['synergy-pro'];
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const [product, setProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [message, setMessage] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
-    const handleOrder = () => {
-        alert(`Interest registered for ${product.title}! Our team will contact you via your registered email shortly.`);
+    useEffect(() => {
+        fetchProduct();
+    }, [id]);
+
+    const fetchProduct = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/products`);
+            const found = res.data.find(p => p.id.toString() === id);
+            setProduct(found);
+            setLoading(false);
+        } catch (err) {
+            console.error('Failed to fetch product details');
+            setLoading(false);
+        }
     };
+
+    const handleInquiry = async (e) => {
+        e.preventDefault();
+        if (!user) {
+            alert('Please login to send an inquiry.');
+            navigate('/login');
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            await axios.post(`${import.meta.env.VITE_API_URL}/inquiries`, {
+                email: user.email,
+                product_id: product.id,
+                message: message || `I am interested in ${product.title}`
+            });
+            alert('Your inquiry has been sent to the admin!');
+            setMessage('');
+        } catch (err) {
+            alert('Failed to send inquiry. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (loading) return <div style={{ padding: '100px', textAlign: 'center' }}>Loading product...</div>;
+    if (!product) return <div style={{ padding: '100px', textAlign: 'center' }}>Product not found</div>;
 
     return (
         <div className="product-details-page">
-            <div className="product-banner" style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(10,10,15,1)), url(${product.banner})` }}>
+            <div className="product-banner" style={{ 
+                backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(10,10,15,1)), url(${product.image_url || 'https://via.placeholder.com/1200x400'})` 
+            }}>
                 <div className="banner-content">
                     <h1 className="banner-title">{product.title}</h1>
-                    <p className="banner-price">{product.price}</p>
+                    <p className="banner-price">Contact for pricing</p>
                 </div>
             </div>
 
             <div className="details-container">
-                <section className="gallery-section">
-                    <h2 className="section-title">Product Gallery</h2>
-                    <div className="gallery-grid">
-                        {product.gallery.map((img, index) => (
-                            <div key={index} className="gallery-item">
-                                <img src={img} alt={`Gallery ${index}`} />
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                <section className="info-section">
+                <section className="info-section" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
                     <div className="description-part">
                         <h2 className="section-title">Description</h2>
-                        <p className="product-description">{product.details}</p>
+                        <p className="product-description">{product.description}</p>
                     </div>
 
-                    <div className="specs-part">
-                        <h2 className="section-title">Specifications</h2>
-                        <ul className="specs-list">
-                            {product.specs.map((spec, index) => (
-                                <li key={index}>{spec}</li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div className="action-part">
-                        <button className="order-btn" onClick={handleOrder}>
-                            I'm Interested in this Product
-                        </button>
-                        <p className="action-hint">Clicking will notify the admin. You will talk over email.</p>
+                    <div className="action-part" style={{ background: 'rgba(255,255,255,0.03)', padding: '30px', borderRadius: '12px' }}>
+                        <h2 className="section-title">Send Inquiry</h2>
+                        <form onSubmit={handleInquiry}>
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', color: '#94a3b8' }}>Your Message</label>
+                                <textarea 
+                                    className="form-control" 
+                                    style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', color: 'white', padding: '12px', borderRadius: '8px' }}
+                                    rows="5"
+                                    placeholder="Write your questions here..."
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <button 
+                                type="submit" 
+                                className="order-btn" 
+                                disabled={submitting}
+                                style={{ width: '100%' }}
+                            >
+                                {submitting ? 'Sending...' : 'Send Message to Admin'}
+                            </button>
+                        </form>
                     </div>
                 </section>
             </div>
