@@ -1,37 +1,27 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import './Team.css';
 
-const teamMembers = [
-    {
-        id: 1,
-        name: 'John Doe',
-        position: 'Lead Architect',
-        email: 'john.doe@gmail.com',
-        image: 'https://i.pravatar.cc/300?img=11'
-    },
-    {
-        id: 2,
-        name: 'Jane Smith',
-        position: 'Full-Stack Developer',
-        email: 'jane.smith@gmail.com',
-        image: 'https://i.pravatar.cc/300?img=32'
-    },
-    {
-        id: 3,
-        name: 'Alex Rivera',
-        position: 'UI/UX Designer',
-        email: 'alex.rivera@gmail.com',
-        image: 'https://i.pravatar.cc/300?img=12'
-    },
-    {
-        id: 4,
-        name: 'Sarah Chen',
-        position: 'DevOps Engineer',
-        email: 'sarah.chen@gmail.com',
-        image: 'https://i.pravatar.cc/300?img=47'
-    }
-];
-
 const Team = () => {
+    const [team, setTeam] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTeam = async () => {
+            try {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL}/team`);
+                setTeam(res.data);
+            } catch (err) {
+                console.error('Failed to fetch team');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTeam();
+    }, []);
+
+    if (loading) return <div className="loading-state">Loading our team...</div>;
+
     return (
         <div className="team-page">
             <header className="page-header">
@@ -40,10 +30,10 @@ const Team = () => {
             </header>
 
             <section className="team-grid">
-                {teamMembers.map((member) => (
+                {team.map((member) => (
                     <div key={member.id} className="team-card">
                         <div className="member-image-wrapper">
-                            <img src={member.image} alt={member.name} className="member-image" />
+                            <img src={member.image_url || `https://ui-avatars.com/api/?name=${member.name}`} alt={member.name} className="member-image" />
                         </div>
                         <div className="member-info">
                             <h3 className="member-name">{member.name}</h3>
@@ -52,6 +42,11 @@ const Team = () => {
                         </div>
                     </div>
                 ))}
+                {team.length === 0 && (
+                    <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: '100px', color: 'var(--text-dim)' }}>
+                        Team members are currently being updated. Please check back later.
+                    </div>
+                )}
             </section>
         </div>
     );

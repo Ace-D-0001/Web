@@ -31,13 +31,7 @@ const Signup = () => {
                 password_confirmation: confirmPassword
             });
             
-            // Login automatically after signup
-            if (response.data.token) {
-                await setToken(response.data.token);
-                navigate('/');
-            } else {
-                navigate('/login', { state: { message: '✅ Account created! Please login.' } });
-            }
+            navigate('/login', { state: { message: `✅ ${response.data.message || 'Account created! Please wait for admin approval.'}` } });
         } catch (err) {
             setError(err.response?.data?.message || 'Something went wrong. Please try again.');
             setLoading(false);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Login.css';
@@ -8,8 +8,14 @@ const AdminLogin = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { adminLogin } = useAuth();
+    const { user, adminLogin, loading: authLoading } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!authLoading && user?.role === 'admin') {
+            navigate('/admin/dashboard', { replace: true });
+        }
+    }, [user, authLoading, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -18,7 +24,7 @@ const AdminLogin = () => {
 
         const result = await adminLogin(email, password);
         if (result.success) {
-            navigate('/admin-dashboard');
+            navigate('/admin/dashboard');
         } else {
             setError(result.message);
             setLoading(false);

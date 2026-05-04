@@ -1,16 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import './Contact.css';
 
 const Contact = () => {
     const [name, setName] = useState('');
     const [message, setMessage] = useState('');
+    const [email, setEmail] = useState('');
+    const [contactInfo, setContactInfo] = useState({
+        address: '123 Tech Avenue, Silicon Valley, CA',
+        email: 'support@synergystack.com',
+        phone: '+1 (555) SYNERGY'
+    });
+    const [aboutInfo, setAboutInfo] = useState({
+        title: 'About SynergyStack',
+        description: 'Founded in 2026, SynergyStack is a global leader in high-performance developer ecosystems. We specialize in bridging the gap between cutting-edge hardware and the most stable software frameworks like React and Laravel.'
+    });
+    const [loading, setLoading] = useState(true);
 
-    const handleSubmit = (e) => {
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const [contactRes, aboutRes] = await Promise.all([
+                    axios.get(`${import.meta.env.VITE_API_URL}/settings/contact_info`),
+                    axios.get(`${import.meta.env.VITE_API_URL}/settings/about_info`)
+                ]);
+                if (contactRes.data) setContactInfo(contactRes.data);
+                if (aboutRes.data) setAboutInfo(aboutRes.data);
+            } catch (err) {
+                console.error('Failed to fetch contact/about settings');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert(`Message sent by ${name}!`);
-        setName('');
-        setMessage('');
+        try {
+            await axios.post(`${import.meta.env.VITE_API_URL}/inquiries`, {
+                email: email,
+                message: `From ${name}: ${message}`
+            });
+            alert(`Thank you ${name}, your message has been sent!`);
+            setName('');
+            setEmail('');
+            setMessage('');
+        } catch (err) {
+            alert('Failed to send message. Please try again.');
+        }
     };
+
+    if (loading) return <div className="loading-state">Loading contact information...</div>;
 
     return (
         <div className="contact-page">
@@ -29,21 +70,21 @@ const Contact = () => {
                             <div className="info-icon">📍</div>
                             <div className="info-details">
                                 <span className="info-label">Our Office</span>
-                                <span className="info-value">123 Tech Avenue, Silicon Valley, CA</span>
+                                <span className="info-value">{contactInfo.address}</span>
                             </div>
                         </div>
                         <div className="info-item">
                             <div className="info-icon">📧</div>
                             <div className="info-details">
                                 <span className="info-label">Email Us</span>
-                                <span className="info-value">support@synergystack.com</span>
+                                <span className="info-value">{contactInfo.email}</span>
                             </div>
                         </div>
                         <div className="info-item">
                             <div className="info-icon">📞</div>
                             <div className="info-details">
                                 <span className="info-label">Call Us</span>
-                                <span className="info-value">+1 (555) SYNERGY</span>
+                                <span className="info-value">{contactInfo.phone}</span>
                             </div>
                         </div>
                     </div>
@@ -60,6 +101,17 @@ const Contact = () => {
                                 value={name} 
                                 onChange={(e) => setName(e.target.value)} 
                                 placeholder="Enter your name"
+                                required 
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="email">Your Email</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                value={email} 
+                                onChange={(e) => setEmail(e.target.value)} 
+                                placeholder="Enter your email"
                                 required 
                             />
                         </div>
@@ -81,24 +133,15 @@ const Contact = () => {
 
             <section className="about-us-bottom">
                 <div className="about-content">
-                    <h2 className="about-title">About SynergyStack</h2>
+                    <h2 className="about-title">{aboutInfo.title}</h2>
                     <div className="about-divider"></div>
-                    <p className="about-description">
-                        Founded in 2026, SynergyStack is a global leader in high-performance developer ecosystems. 
-                        We specialize in bridging the gap between cutting-edge hardware and the most stable 
-                        software frameworks like React and Laravel.
-                    </p>
-                    <p className="about-description">
-                        Our mission is to empower developers with the tools they need to build secure, 
-                        scalable, and beautiful digital experiences without compromise. We believe in the 
-                        power of synergy—where the combined effect of our technologies is greater than 
-                        the sum of their parts.
+                    <p className="about-description" style={{ whiteSpace: 'pre-line' }}>
+                        {aboutInfo.description}
                     </p>
                 </div>
             </section>
         </div>
     );
 };
-
 
 export default Contact;

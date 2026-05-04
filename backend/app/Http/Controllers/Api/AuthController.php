@@ -30,16 +30,13 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'user',
-            'status' => 'active',
+            'status' => 'pending',
             'email_verified_at' => now(),
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-
         return response()->json([
-            'message' => 'Account created successfully',
-            'user' => $user,
-            'token' => $token
+            'message' => 'Account created successfully. Please wait for admin approval.',
+            'user' => $user
         ]);
     }
 
@@ -154,6 +151,14 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials.'], 401);
         }
 
+        if ($user->status === 'pending') {
+            return response()->json(['message' => 'Your account is pending admin approval.'], 403);
+        } elseif ($user->status === 'rejected') {
+            return response()->json(['message' => 'Your account has been rejected by the admin.'], 403);
+        } elseif ($user->status !== 'active') {
+            return response()->json(['message' => 'Your account does not have access.'], 403);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -209,7 +214,7 @@ class AuthController extends Controller
                     'google_id' => $googleUser->getId(),
                     'avatar' => $googleUser->getAvatar(),
                     'password' => Hash::make(Str::random(24)),
-                    'status' => 'active',
+                    'status' => 'pending',
                     'role' => 'user',
                     'email_verified_at' => now(),
                 ]);
@@ -220,10 +225,19 @@ class AuthController extends Controller
                 ]);
             }
 
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+
+            if ($user->status === 'pending') {
+                return redirect()->away($frontendUrl . '/login?error=' . urlencode('Your account is pending admin approval.'));
+            } elseif ($user->status === 'rejected') {
+                return redirect()->away($frontendUrl . '/login?error=' . urlencode('Your account has been rejected by the admin.'));
+            } elseif ($user->status !== 'active') {
+                return redirect()->away($frontendUrl . '/login?error=' . urlencode('Your account does not have access.'));
+            }
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             // Redirect to frontend with token
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
             return redirect()->away($frontendUrl . '/login?token=' . $token);
 
         } catch (\Exception $e) {

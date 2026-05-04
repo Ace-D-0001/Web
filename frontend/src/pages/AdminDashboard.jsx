@@ -1,28 +1,33 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import Invoice from '../components/Invoice';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
-    const [activeTab, setActiveTab] = useState('users');
-    const [stats, setStats] = useState({ users: 0, products: 0, inquiries: 0 });
+    const [activeTab, setActiveTab] = useState('overview');
+    const [stats, setStats] = useState({ users: 0, products: 0, inquiries: 0, team: 0 });
     const [loading, setLoading] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const { logout } = useAuth();
 
     useEffect(() => {
-        // Initial data fetch
         fetchStats();
     }, []);
 
     const fetchStats = async () => {
         try {
-            const [u, p, i] = await Promise.all([
+            const [u, p, i, t] = await Promise.all([
                 axios.get(`${import.meta.env.VITE_API_URL}/admin/users`),
                 axios.get(`${import.meta.env.VITE_API_URL}/admin/products`),
-                axios.get(`${import.meta.env.VITE_API_URL}/admin/inquiries`)
+                axios.get(`${import.meta.env.VITE_API_URL}/admin/inquiries`),
+                axios.get(`${import.meta.env.VITE_API_URL}/admin/team`)
             ]);
             setStats({
                 users: u.data.length,
                 products: p.data.length,
-                inquiries: i.data.length
+                inquiries: i.data.length,
+                team: t.data.length
             });
             setLoading(false);
         } catch (err) {
@@ -31,50 +36,67 @@ const AdminDashboard = () => {
         }
     };
 
+    const sidebarItems = [
+        { id: 'overview', label: 'Dashboard', icon: '📊', group: 'Core' },
+        { id: 'users', label: 'User Management', icon: '👥', group: 'Core' },
+        { id: 'cards', label: 'Service Cards', icon: '🎴', group: 'Core' },
+        { id: 'orders', label: 'Order Management', icon: '📦', group: 'Core' },
+        { id: 'team', label: 'Team Members', icon: '👔', group: 'Core' },
+        { id: 'messages', label: 'Inquiries', icon: '📩', group: 'Communication' },
+        { id: 'settings', label: 'Site Branding', icon: '⚙️', group: 'Configuration' },
+    ];
+
     if (loading) return <div className="admin-loading">Loading Dashboard...</div>;
 
     return (
         <div className="admin-layout">
-            {/* Sidebar */}
-            <aside className="admin-sidebar">
+            <button className="mobile-toggle" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+                {isSidebarOpen ? '✕' : '☰'}
+            </button>
+            
+            {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />}
+
+            <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-logo">AdminPanel</div>
                 <nav className="sidebar-nav">
-                    <button 
-                        className={`nav-item ${activeTab === 'users' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('users')}
-                    >
-                        👥 Users
-                    </button>
-                    <button 
-                        className={`nav-item ${activeTab === 'cards' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('cards')}
-                    >
-                        🎴 Card Management
-                    </button>
-                    <button 
-                        className={`nav-item ${activeTab === 'messages' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('messages')}
-                    >
-                        📩 Inquiries
-                    </button>
-                    <button 
-                        className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('settings')}
-                    >
-                        ⚙️ Site Settings
-                    </button>
+                    {/* Groups */}
+                    {['Core', 'Communication', 'Configuration'].map(group => (
+                        <div key={group} className="nav-group">
+                            <div className="nav-group-title">{group}</div>
+                            {sidebarItems.filter(item => item.group === group).map(item => (
+                                <button 
+                                    key={item.id}
+                                    className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setActiveTab(item.id);
+                                        setIsSidebarOpen(false);
+                                    }}
+                                >
+                                    <span className="nav-icon">{item.icon}</span>
+                                    <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    ))}
                 </nav>
                 <div className="sidebar-footer">
                     <button className="nav-item" onClick={() => window.location.href = '/'}>
-                        🌐 View Website
+                        <span className="nav-icon">🌐</span>
+                        <span>View Website</span>
+                    </button>
+                    <button className="nav-item btn-logout" onClick={logout} style={{ color: '#ff453a' }}>
+                        <span className="nav-icon">🚪</span>
+                        <span>Sign Out</span>
                     </button>
                 </div>
             </aside>
 
-            {/* Main Content */}
             <main className="admin-main">
+                {activeTab === 'overview' && <OverviewSection stats={stats} />}
+                {activeTab === 'orders' && <OrdersSection />}
                 {activeTab === 'users' && <UsersSection />}
                 {activeTab === 'cards' && <CardsSection />}
+                {activeTab === 'team' && <TeamSection />}
                 {activeTab === 'messages' && <MessagesSection />}
                 {activeTab === 'settings' && <SettingsSection />}
             </main>
@@ -83,6 +105,380 @@ const AdminDashboard = () => {
 };
 
 /* --- SUB-SECTIONS --- */
+
+const OverviewSection = ({ stats }) => {
+    return (
+        <div className="section">
+            <header className="content-header">
+                <div>
+                    <h1>Dashboard Overview</h1>
+                    <p style={{ color: 'var(--text-dim)', marginTop: '4px' }}>Welcome back, Admin!</p>
+                </div>
+            </header>
+
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <div className="stat-label">Total Users</div>
+                    <div className="stat-value">{stats.users}</div>
+                    <div style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--success)' }}>↑ 12% from last month</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">Active Services</div>
+                    <div className="stat-value">{stats.products}</div>
+                    <div style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--primary)' }}>Fully Optimized</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">New Inquiries</div>
+                    <div className="stat-value">{stats.inquiries}</div>
+                    <div style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--accent)' }}>Requires attention</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">Team Members</div>
+                    <div className="stat-value">{stats.team}</div>
+                    <div style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--text-dim)' }}>Core Staff</div>
+                </div>
+            </div>
+
+            <div className="data-card" style={{ padding: '2rem' }}>
+                <h3 style={{ marginBottom: '1.5rem' }}>Recent Activity</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {[
+                        { icon: '🆕', text: 'New inquiry received from contact form', time: '2 minutes ago' },
+                        { icon: '👤', text: 'User "John Doe" registered as new member', time: '1 hour ago' },
+                        { icon: '✅', text: 'Service "Premium Package" updated', time: '3 hours ago' },
+                        { icon: '📩', text: 'System backup completed successfully', time: '5 hours ago' }
+                    ].map((item, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                            <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{item.text}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{item.time}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const OrdersSection = () => {
+    const [orders, setOrders] = useState([]);
+    const [products, setProducts] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [showInvoice, setShowInvoice] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [filter, setFilter] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [newOrder, setNewOrder] = useState({
+        user_email: '',
+        notes: '',
+        items: [{ product_name: '', quantity: 1, unit_price: 0 }]
+    });
+
+    useEffect(() => { 
+        fetchOrders(); 
+        fetchProducts();
+    }, []);
+
+    const fetchOrders = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/orders`);
+            setOrders(res.data);
+        } catch (err) {
+            console.error('Failed to fetch orders', err);
+        }
+    };
+
+    const fetchProducts = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/products`);
+            setProducts(res.data);
+        } catch (err) {
+            console.error('Failed to fetch products', err);
+        }
+    };
+
+    const handleCreateDraft = async (e) => {
+        e.preventDefault();
+        try {
+            await axios.post(`${import.meta.env.VITE_API_URL}/admin/orders`, newOrder);
+            setShowModal(false);
+            fetchOrders();
+            setNewOrder({ user_email: '', notes: '', items: [{ product_name: '', quantity: 1, unit_price: 0 }] });
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to create order. Make sure the email exists.');
+        }
+    };
+
+    const handleAction = async (id, action) => {
+        try {
+            if (action === 'cancel') {
+                const reason = prompt("Optional: Enter cancellation reason");
+                if (reason === null) return;
+                await axios.post(`${import.meta.env.VITE_API_URL}/admin/orders/${id}/cancel`, { cancel_reason: reason });
+            } else {
+                await axios.post(`${import.meta.env.VITE_API_URL}/admin/orders/${id}/${action}`);
+            }
+            fetchOrders();
+            if (selectedOrder && selectedOrder.id === id) {
+                const updated = await axios.get(`${import.meta.env.VITE_API_URL}/admin/orders/${id}`);
+                setSelectedOrder(updated.data);
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || `Failed to ${action} order.`);
+        }
+    };
+
+    const openDetails = async (order) => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/orders/${order.id}`);
+            setSelectedOrder(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const filteredOrders = orders.filter(o => {
+        const matchesFilter = filter === 'all' || o.status === filter;
+        const matchesSearch = o.user?.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                              o.user?.name.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesFilter && matchesSearch;
+    });
+
+    return (
+        <div className="section">
+            <header className="content-header">
+                <div>
+                    <h1>Order Management</h1>
+                    <p style={{ color: 'var(--text-dim)', marginTop: '4px' }}>Manage customer orders and workflow</p>
+                </div>
+                <button className="action-btn btn-primary" onClick={() => setShowModal(true)}>
+                    + Create Order
+                </button>
+            </header>
+
+            <div className="data-card" style={{ overflowX: 'auto' }}>
+                <div style={{ padding: '1.5rem', marginBottom: '0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {['all', 'draft', 'assigned', 'confirmed', 'completed', 'cancelled'].map(f => (
+                            <button 
+                                key={f} 
+                                onClick={() => setFilter(f)}
+                                className={`badge ${filter === f ? 'badge-primary' : ''}`}
+                                style={{ 
+                                    cursor: 'pointer', 
+                                    opacity: filter === f ? 1 : 0.6,
+                                    transition: 'all 0.2s',
+                                    border: 'none'
+                                }}
+                            >
+                                {f.toUpperCase()}
+                            </button>
+                        ))}
+                    </div>
+                    
+                    <div className="search-box" style={{ flex: 1, maxWidth: '300px' }}>
+                        <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="Search by email or name..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{ padding: '8px 16px', borderRadius: '20px' }}
+                        />
+                    </div>
+                </div>
+
+                <table className="admin-table">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredOrders.map(o => (
+                            <tr key={o.id}>
+                                <td>ORD-{String(o.id).padStart(5, '0')}</td>
+                                <td>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span style={{ fontWeight: 600 }}>{o.user?.name || 'Unknown'}</span>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{o.user?.email}</span>
+                                    </div>
+                                </td>
+                                <td>{o.items?.length || 0} items</td>
+                                <td style={{ fontWeight: 600 }}>${Number(o.total_price).toFixed(2)}</td>
+                                <td><span className={`badge badge-${o.status}`}>{o.status}</span></td>
+                                <td>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        {o.status === 'draft' && (
+                                            <button className="action-btn" onClick={() => handleAction(o.id, 'assign')} title="Assign to User">✈️</button>
+                                        )}
+                                        {o.status === 'confirmed' && (
+                                            <button className="action-btn btn-success" onClick={() => handleAction(o.id, 'complete')} title="Mark Complete">✅</button>
+                                        )}
+                                        <button className="action-btn" onClick={() => openDetails(o)} title="View Details">👁️</button>
+                                        {o.status !== 'completed' && o.status !== 'cancelled' && (
+                                            <button className="action-btn btn-danger" onClick={() => handleAction(o.id, 'cancel')} title="Cancel Order">❌</button>
+                                        )}
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Create Draft Modal */}
+            {showModal && (
+                <div className="modal-overlay">
+                    <div className="admin-modal" style={{ maxWidth: '600px' }}>
+                        <h2>Create New Order (Draft)</h2>
+                        <form onSubmit={handleCreateDraft} style={{ marginTop: '20px' }}>
+                            <div className="form-group">
+                                <label>Customer Email</label>
+                                <input className="form-control" type="email" required placeholder="User must be registered"
+                                    value={newOrder.user_email} onChange={e => setNewOrder({...newOrder, user_email: e.target.value})} />
+                            </div>
+                            
+                            <h4 style={{ margin: '20px 0 10px' }}>Order Items</h4>
+                            {newOrder.items.map((item, idx) => (
+                                <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                    <select className="form-control" style={{ flex: 2 }} required
+                                        value={item.product_name} onChange={e => {
+                                            const items = [...newOrder.items];
+                                            items[idx].product_name = e.target.value;
+                                            
+                                            // Auto-fill price if selected
+                                            const selectedProduct = products.find(p => p.title === e.target.value);
+                                            if (selectedProduct) {
+                                                const numericPrice = parseFloat(selectedProduct.price.replace(/[^0-9.]/g, ''));
+                                                if (!isNaN(numericPrice)) {
+                                                    items[idx].unit_price = numericPrice;
+                                                }
+                                            }
+                                            setNewOrder({...newOrder, items});
+                                        }}>
+                                        <option value="">Select a Product</option>
+                                        {products.map(p => <option key={p.id} value={p.title}>{p.title}</option>)}
+                                    </select>
+                                    <input className="form-control" style={{ flex: 1 }} type="number" min="1" placeholder="Qty" required
+                                        value={item.quantity} onChange={e => {
+                                            const items = [...newOrder.items];
+                                            items[idx].quantity = e.target.value;
+                                            setNewOrder({...newOrder, items});
+                                        }} />
+                                    <input className="form-control" style={{ flex: 1 }} type="number" min="0" step="0.01" placeholder="Unit $" required
+                                        value={item.unit_price} onChange={e => {
+                                            const items = [...newOrder.items];
+                                            items[idx].unit_price = e.target.value;
+                                            setNewOrder({...newOrder, items});
+                                        }} />
+                                    {newOrder.items.length > 1 && (
+                                        <button type="button" className="action-btn btn-danger" onClick={() => {
+                                            setNewOrder({...newOrder, items: newOrder.items.filter((_, i) => i !== idx)});
+                                        }}>🗑️</button>
+                                    )}
+                                </div>
+                            ))}
+                            <button type="button" className="action-btn" onClick={() => setNewOrder({...newOrder, items: [...newOrder.items, {product_name: '', quantity: 1, unit_price: 0}]})}>
+                                + Add Another Item
+                            </button>
+
+                            <div className="form-group" style={{ marginTop: '20px' }}>
+                                <label>Admin Notes</label>
+                                <textarea className="form-control" rows="2" value={newOrder.notes} onChange={e => setNewOrder({...newOrder, notes: e.target.value})}></textarea>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                                <button type="submit" className="action-btn btn-primary" style={{ flex: 1 }}>Save as Draft</button>
+                                <button type="button" className="action-btn" style={{ flex: 1 }} onClick={() => setShowModal(false)}>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Order Details Modal */}
+            {selectedOrder && (
+                <div className="modal-overlay">
+                    <div className="admin-modal" style={{ maxWidth: '600px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h2>Order #ORD-{String(selectedOrder.id).padStart(5, '0')}</h2>
+                            <span className={`badge badge-${selectedOrder.status}`}>{selectedOrder.status.toUpperCase()}</span>
+                        </div>
+
+                        <div className="detail-group">
+                            <p><strong>Customer:</strong> {selectedOrder.user?.name} ({selectedOrder.user?.email})</p>
+                            <p><strong>Created By:</strong> {selectedOrder.creator?.name}</p>
+                            <p><strong>Timestamps:</strong></p>
+                            <ul style={{ paddingLeft: '20px', margin: '5px 0', fontSize: '0.9rem', color: 'var(--text-dim)' }}>
+                                <li>Created: {new Date(selectedOrder.created_at).toLocaleString()}</li>
+                                <li>Assigned: {selectedOrder.assigned_at ? new Date(selectedOrder.assigned_at).toLocaleString() : '-'}</li>
+                                <li>Confirmed: {selectedOrder.confirmed_at ? new Date(selectedOrder.confirmed_at).toLocaleString() : '-'}</li>
+                            </ul>
+                        </div>
+
+                        <h4 style={{ margin: '20px 0 10px' }}>Line Items</h4>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
+                            <thead style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                <tr>
+                                    <th style={{ textAlign: 'left', padding: '8px 0' }}>Item</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                    <th style={{ textAlign: 'right' }}>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {selectedOrder.items?.map((item, idx) => (
+                                    <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <td style={{ padding: '8px 0' }}>{item.product_name}</td>
+                                        <td style={{ textAlign: 'center' }}>{item.quantity}</td>
+                                        <td style={{ textAlign: 'center' }}>${Number(item.unit_price).toFixed(2)}</td>
+                                        <td style={{ textAlign: 'right' }}>${Number(item.subtotal).toFixed(2)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colSpan="3" style={{ textAlign: 'right', padding: '10px 0' }}>Total:</th>
+                                    <th style={{ textAlign: 'right', fontSize: '1.2rem', padding: '10px 0' }}>${Number(selectedOrder.total_price).toFixed(2)}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        {selectedOrder.notes && (
+                            <div className="detail-group">
+                                <label>Admin Notes:</label>
+                                <p style={{ fontStyle: 'italic', color: 'var(--text-dim)', padding: '10px', background: 'rgba(255,255,255,0.05)' }}>{selectedOrder.notes}</p>
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                            {selectedOrder.status === 'draft' && (
+                                <button className="action-btn btn-primary" style={{ flex: 1 }} onClick={() => { handleAction(selectedOrder.id, 'assign'); setSelectedOrder(null); }}>✈️ Assign Order</button>
+                            )}
+                            {selectedOrder.status === 'confirmed' && (
+                                <button className="action-btn btn-success" style={{ flex: 1 }} onClick={() => { handleAction(selectedOrder.id, 'complete'); setSelectedOrder(null); }}>✅ Mark Complete</button>
+                            )}
+                            <button className="action-btn" style={{ flex: 1 }} onClick={() => setShowInvoice(true)}>🖨️ View Invoice</button>
+                            <button className="action-btn" style={{ flex: 1 }} onClick={() => setSelectedOrder(null)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showInvoice && selectedOrder && (
+                <Invoice order={selectedOrder} onClose={() => setShowInvoice(false)} />
+            )}
+        </div>
+    );
+};
 
 const UsersSection = () => {
     const [users, setUsers] = useState([]);
@@ -133,12 +529,12 @@ const UsersSection = () => {
                         {users.map(u => (
                             <tr key={u.id}>
                                 <td>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <img src={u.avatar || `https://ui-avatars.com/api/?name=${u.name}`} className="table-avatar" />
-                                        {u.name}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <img src={u.avatar || `https://ui-avatars.com/api/?name=${u.name}&background=6366f1&color=fff`} className="table-avatar" />
+                                        <span style={{ fontWeight: 600 }}>{u.name}</span>
                                     </div>
                                 </td>
-                                <td>{u.email}</td>
+                                <td style={{ color: 'var(--text-dim)' }}>{u.email}</td>
                                 <td>
                                     <button 
                                         className={`badge badge-admin`} 
@@ -150,13 +546,12 @@ const UsersSection = () => {
                                     </button>
                                 </td>
                                 <td><span className={`badge badge-${u.status}`}>{u.status}</span></td>
-                                <td>{new Date(u.created_at).toLocaleDateString()}</td>
+                                <td style={{ color: 'var(--text-dim)' }}>{new Date(u.created_at).toLocaleDateString()}</td>
                                 <td>
-                                    <div style={{ display: 'flex', gap: '5px' }}>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
                                         <button className="action-btn" onClick={() => updateStatus(u.id, 'active')} title="Approve">✅</button>
-                                        <button className="action-btn" onClick={() => updateStatus(u.id, 'rejected')} title="Reject">❌</button>
                                         <button className="action-btn" onClick={() => updateStatus(u.id, 'pending')} title="Set Pending">⏳</button>
-                                        <button className="action-btn" onClick={() => deleteUser(u.id)} title="Delete" style={{ color: '#ef4444' }}>🗑️</button>
+                                        <button className="action-btn btn-danger" onClick={() => deleteUser(u.id)} title="Delete">🗑️</button>
                                     </div>
                                 </td>
                             </tr>
@@ -195,13 +590,17 @@ const CardsSection = () => {
             specs: typeof currentCard.specs === 'string' ? currentCard.specs.split('\n').map(s => s.trim()).filter(s => s) : currentCard.specs
         };
 
-        if (currentCard.id) {
-            await axios.put(`${import.meta.env.VITE_API_URL}/admin/products/${currentCard.id}`, payload);
-        } else {
-            await axios.post(`${import.meta.env.VITE_API_URL}/admin/products`, payload);
+        try {
+            if (currentCard.id) {
+                await axios.put(`${import.meta.env.VITE_API_URL}/admin/products/${currentCard.id}`, payload);
+            } else {
+                await axios.post(`${import.meta.env.VITE_API_URL}/admin/products`, payload);
+            }
+            setShowModal(false);
+            fetchCards();
+        } catch (err) {
+            alert('Failed to save. Check your data.');
         }
-        setShowModal(false);
-        fetchCards();
     };
 
     const togglePause = async (id) => {
@@ -219,12 +618,15 @@ const CardsSection = () => {
     return (
         <div className="section">
             <header className="content-header">
-                <h1>Product/Service Cards</h1>
+                <div>
+                    <h1>Service Cards</h1>
+                    <p style={{ color: 'var(--text-dim)', marginTop: '4px' }}>Manage your website offerings</p>
+                </div>
                 <button className="action-btn btn-primary" onClick={() => { 
                     setCurrentCard({ title: '', price: '', description: '', image_url: '', gallery: '', specs: '' }); 
                     setShowModal(true); 
                 }}>
-                    + Add New Card
+                    + Create New Card
                 </button>
             </header>
 
@@ -234,10 +636,14 @@ const CardsSection = () => {
                         <img src={p.image_url || 'https://via.placeholder.com/300x180?text=No+Image'} className="card-img-preview" />
                         <div className="card-body">
                             <h3>{p.title}</h3>
-                            <p style={{ color: 'var(--admin-primary)', fontWeight: '600' }}>{p.price || 'N/A'}</p>
-                            <p style={{ color: 'var(--admin-text-dim)', fontSize: '0.9rem', margin: '8px 0' }}>{p.description}</p>
-                            <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-                                <button className="action-btn" onClick={() => { 
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ color: 'var(--primary-light)', fontWeight: '700', fontSize: '1.1rem' }}>{p.price || 'Contact for Price'}</span>
+                            </div>
+                            <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem', margin: '12px 0', lineHeight: '1.5' }}>
+                                {p.description?.length > 100 ? p.description.substring(0, 100) + '...' : p.description}
+                            </p>
+                            <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', paddingTop: '16px' }}>
+                                <button className="action-btn" style={{ flex: 1 }} onClick={() => { 
                                     setCurrentCard({
                                         ...p,
                                         gallery: p.gallery ? p.gallery.join(', ') : '',
@@ -245,8 +651,10 @@ const CardsSection = () => {
                                     }); 
                                     setShowModal(true); 
                                 }}>Edit</button>
-                                <button className="action-btn" onClick={() => togglePause(p.id)}>{p.is_paused ? '▶️ Resume' : '⏸️ Pause'}</button>
-                                <button className="action-btn" onClick={() => deleteCard(p.id)} style={{ color: '#ef4444' }}>🗑️</button>
+                                <button className="action-btn" onClick={() => togglePause(p.id)}>
+                                    {p.is_paused ? '▶️ Resume' : '⏸️ Pause'}
+                                </button>
+                                <button className="action-btn btn-danger" onClick={() => deleteCard(p.id)}>🗑️</button>
                             </div>
                         </div>
                     </div>
@@ -255,38 +663,163 @@ const CardsSection = () => {
 
             {showModal && (
                 <div className="modal-overlay">
-                    <div className="admin-modal" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <h2>{currentCard.id ? 'Edit Card' : 'Create New Card'}</h2>
+                    <div className="admin-modal">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                            <h2>{currentCard.id ? 'Edit Service' : 'New Service'}</h2>
+                            <button className="action-btn" onClick={() => setShowModal(false)} style={{ padding: '8px' }}>✕</button>
+                        </div>
                         <form onSubmit={handleSave}>
-                            <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                            <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: '24px' }}>
                                 <div className="form-group">
                                     <label>Title</label>
-                                    <input className="form-control" value={currentCard.title} onChange={e => setCurrentCard({...currentCard, title: e.target.value})} required />
+                                    <input className="form-control" placeholder="e.g. Premium Hajj Package" value={currentCard.title} onChange={e => setCurrentCard({...currentCard, title: e.target.value})} required />
                                 </div>
                                 <div className="form-group">
-                                    <label>Price (e.g. $299)</label>
-                                    <input className="form-control" value={currentCard.price} onChange={e => setCurrentCard({...currentCard, price: e.target.value})} />
+                                    <label>Price</label>
+                                    <input className="form-control" placeholder="e.g. $4,500" value={currentCard.price} onChange={e => setCurrentCard({...currentCard, price: e.target.value})} />
                                 </div>
                             </div>
+                            
                             <div className="form-group">
-                                <label>Main Image URL</label>
-                                <input className="form-control" value={currentCard.image_url} onChange={e => setCurrentCard({...currentCard, image_url: e.target.value})} />
+                                <label>Image URL</label>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <input className="form-control" style={{ flex: 1 }} placeholder="https://images.unsplash.com/..." value={currentCard.image_url} onChange={e => setCurrentCard({...currentCard, image_url: e.target.value})} />
+                                    {currentCard.image_url && (
+                                        <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                                            <img src={currentCard.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <label>Gallery Images (Comma separated URLs)</label>
-                                <textarea className="form-control" rows="2" value={currentCard.gallery} onChange={e => setCurrentCard({...currentCard, gallery: e.target.value})} placeholder="url1, url2, url3" />
-                            </div>
+
                             <div className="form-group">
                                 <label>Description</label>
-                                <textarea className="form-control" rows="3" value={currentCard.description} onChange={e => setCurrentCard({...currentCard, description: e.target.value})} />
+                                <textarea className="form-control" rows="3" placeholder="Describe the service..." value={currentCard.description} onChange={e => setCurrentCard({...currentCard, description: e.target.value})} />
                             </div>
+
                             <div className="form-group">
                                 <label>Specifications (One per line)</label>
-                                <textarea className="form-control" rows="4" value={currentCard.specs} onChange={e => setCurrentCard({...currentCard, specs: e.target.value})} placeholder="16GB RAM&#10;2TB SSD" />
+                                <textarea className="form-control" rows="3" placeholder="Hotel accommodation&#10;Flight included&#10;Visa processing" value={currentCard.specs} onChange={e => setCurrentCard({...currentCard, specs: e.target.value})} />
                             </div>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <button type="submit" className="action-btn btn-primary">Save Changes</button>
-                                <button type="button" className="action-btn" onClick={() => setShowModal(false)}>Cancel</button>
+
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
+                                <button type="submit" className="action-btn btn-primary" style={{ flex: 1 }}>Save Changes</button>
+                                <button type="button" className="action-btn" style={{ flex: 1 }} onClick={() => setShowModal(false)}>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const TeamSection = () => {
+    const [team, setTeam] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [currentMember, setCurrentMember] = useState({ name: '', position: '', email: '', image_url: '' });
+
+    useEffect(() => { fetchTeam(); }, []);
+
+    const fetchTeam = async () => {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/team`);
+        setTeam(res.data);
+    };
+
+    const handleSave = async (e) => {
+        e.preventDefault();
+        try {
+            if (currentMember.id) {
+                await axios.put(`${import.meta.env.VITE_API_URL}/admin/team/${currentMember.id}`, currentMember);
+            } else {
+                await axios.post(`${import.meta.env.VITE_API_URL}/admin/team`, currentMember);
+            }
+            setShowModal(false);
+            fetchTeam();
+        } catch (err) {
+            alert('Failed to save team member.');
+        }
+    };
+
+    const deleteMember = async (id) => {
+        if (window.confirm('Delete this team member?')) {
+            await axios.delete(`${import.meta.env.VITE_API_URL}/admin/team/${id}`);
+            fetchTeam();
+        }
+    };
+
+    return (
+        <div className="section">
+            <header className="content-header">
+                <div>
+                    <h1>Team Management</h1>
+                    <p style={{ color: 'var(--text-dim)', marginTop: '4px' }}>Manage your organization's staff</p>
+                </div>
+                <button className="action-btn btn-primary" onClick={() => { 
+                    setCurrentMember({ name: '', position: '', email: '', image_url: '' }); 
+                    setShowModal(true); 
+                }}>
+                    + Add Member
+                </button>
+            </header>
+
+            <div className="data-card">
+                <table className="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Member</th>
+                            <th>Position</th>
+                            <th>Gmail</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {team.map(m => (
+                            <tr key={m.id}>
+                                <td>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <img src={m.image_url || `https://ui-avatars.com/api/?name=${m.name}`} className="table-avatar" />
+                                        <span style={{ fontWeight: 600 }}>{m.name}</span>
+                                    </div>
+                                </td>
+                                <td>{m.position}</td>
+                                <td style={{ color: 'var(--text-dim)' }}>{m.email}</td>
+                                <td>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button className="action-btn" onClick={() => { setCurrentMember(m); setShowModal(true); }}>Edit</button>
+                                        <button className="action-btn btn-danger" onClick={() => deleteMember(m.id)}>🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {showModal && (
+                <div className="modal-overlay">
+                    <div className="admin-modal">
+                        <h2>{currentMember.id ? 'Edit Member' : 'Add New Member'}</h2>
+                        <form onSubmit={handleSave} style={{ marginTop: '24px' }}>
+                            <div className="form-group">
+                                <label>Full Name</label>
+                                <input className="form-control" value={currentMember.name} onChange={e => setCurrentMember({...currentMember, name: e.target.value})} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Position</label>
+                                <input className="form-control" value={currentMember.position} onChange={e => setCurrentMember({...currentMember, position: e.target.value})} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Gmail Address</label>
+                                <input className="form-control" type="email" value={currentMember.email} onChange={e => setCurrentMember({...currentMember, email: e.target.value})} />
+                            </div>
+                            <div className="form-group">
+                                <label>Profile Image URL</label>
+                                <input className="form-control" value={currentMember.image_url} onChange={e => setCurrentMember({...currentMember, image_url: e.target.value})} />
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
+                                <button type="submit" className="action-btn btn-primary" style={{ flex: 1 }}>Save Member</button>
+                                <button type="button" className="action-btn" style={{ flex: 1 }} onClick={() => setShowModal(false)}>Cancel</button>
                             </div>
                         </form>
                     </div>
@@ -307,36 +840,55 @@ const MessagesSection = () => {
     };
 
     const deleteMsg = async (id) => {
-        await axios.delete(`${import.meta.env.VITE_API_URL}/admin/inquiries/${id}`);
-        fetchMessages();
+        if (window.confirm('Delete this inquiry?')) {
+            await axios.delete(`${import.meta.env.VITE_API_URL}/admin/inquiries/${id}`);
+            fetchMessages();
+        }
     };
 
     return (
         <div className="section">
             <header className="content-header">
-                <h1>User Inquiries</h1>
+                <div>
+                    <h1>User Inquiries</h1>
+                    <p style={{ color: 'var(--text-dim)', marginTop: '4px' }}>Incoming requests from your website</p>
+                </div>
             </header>
             <div className="data-card">
                 <table className="admin-table">
                     <thead>
                         <tr>
-                            <th>Email</th>
-                            <th>Product Interest</th>
+                            <th>User Info</th>
+                            <th>Interest</th>
                             <th>Message</th>
-                            <th>Date</th>
+                            <th>Received</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {messages.map(m => (
                             <tr key={m.id}>
-                                <td>{m.email}</td>
-                                <td><span className="badge badge-admin">{m.product?.title || 'General'}</span></td>
-                                <td style={{ maxWidth: '300px' }}>{m.message}</td>
-                                <td>{new Date(m.created_at).toLocaleDateString()}</td>
-                                <td><button className="action-btn" onClick={() => deleteMsg(m.id)}>Archive</button></td>
+                                <td>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span style={{ fontWeight: 600 }}>{m.email}</span>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>ID: #{m.id}</span>
+                                    </div>
+                                </td>
+                                <td><span className="badge badge-admin">{m.product?.title || 'General Inquiry'}</span></td>
+                                <td style={{ maxWidth: '300px', lineHeight: '1.4' }}>{m.message}</td>
+                                <td style={{ color: 'var(--text-dim)' }}>{new Date(m.created_at).toLocaleString()}</td>
+                                <td>
+                                    <button className="action-btn btn-danger" onClick={() => deleteMsg(m.id)}>🗑️ Delete</button>
+                                </td>
                             </tr>
                         ))}
+                        {messages.length === 0 && (
+                            <tr>
+                                <td colSpan="5" style={{ textAlign: 'center', padding: '48px', color: 'var(--text-dim)' }}>
+                                    No inquiries found.
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -346,104 +898,180 @@ const MessagesSection = () => {
 
 const SettingsSection = () => {
     const [settings, setSettings] = useState({ 
-        navbar: { brand: 'Nusrat', logo_url: '', links: [{label: 'Home', path: '/'}, {label: 'Contact', path: '/contact'}] }, 
-        footer: { 
-            brand: 'Nusrat', 
-            about_text: 'Building the future...', 
-            copyright: '© 2026', 
+        navbar_config: { brand: 'SynergyStack', logo_url: '' }, 
+        footer_config: { 
+            brand: 'SynergyStack', 
+            copyright: '© 2026',
+            about_text: 'Building the future of full-stack development.',
+            social: { facebook: '', twitter: '', linkedin: '', instagram: '' },
             contact: { email: '', phone: '', address: '' },
-            social: { facebook: '', twitter: '', linkedin: '', instagram: '' }
-        } 
+            map_url: '',
+            quick_links: []
+        },
+        contact_info: {
+            address: '123 Tech Avenue, Silicon Valley, CA',
+            email: 'support@synergystack.com',
+            phone: '+1 (555) SYNERGY'
+        },
+        about_info: {
+            title: 'About SynergyStack',
+            description: 'Founded in 2026, SynergyStack is a global leader in high-performance developer ecosystems...'
+        }
     });
 
     useEffect(() => { fetchSettings(); }, []);
 
     const fetchSettings = async () => {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/settings`);
-        if (res.data.navbar_config) setSettings(prev => ({ ...prev, navbar: res.data.navbar_config }));
-        if (res.data.footer_config) setSettings(prev => ({ ...prev, footer: res.data.footer_config }));
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/settings`);
+            setSettings(prev => ({ ...prev, ...res.data }));
+        } catch (err) {
+            console.error('Failed to fetch settings');
+        }
     };
 
     const saveSettings = async (key, value) => {
         await axios.post(`${import.meta.env.VITE_API_URL}/admin/settings/${key}`, { value });
-        alert(`${key} updated!`);
+        alert(`${key.replace('_', ' ').toUpperCase()} updated successfully!`);
     };
 
     return (
         <div className="section">
             <header className="content-header">
-                <h1>Platform Customization</h1>
+                <div>
+                    <h1>Platform Branding & Content</h1>
+                    <p style={{ color: 'var(--text-dim)', marginTop: '4px' }}>Global settings for your application</p>
+                </div>
             </header>
             
-            <div className="stats-grid">
-                {/* Navbar Settings */}
-                <div className="stat-card" style={{ gridColumn: 'span 1' }}>
-                    <h3>Navbar Settings</h3>
-                    <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Brand Name</label>
-                        <input className="form-control" value={settings.navbar.brand} onChange={e => setSettings({...settings, navbar: {...settings.navbar, brand: e.target.value}})} />
+            <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
+                {/* Branding */}
+                <div className="stat-card" style={{ gridColumn: 'span 2' }}>
+                    <h3 style={{ marginBottom: '24px' }}>Header & Footer Branding</h3>
+                    <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '0' }}>
+                        <div className="nav-group">
+                            <label className="nav-group-title" style={{ padding: 0 }}>General</label>
+                            <div className="form-group">
+                                <label>Platform Name</label>
+                                <input className="form-control" value={settings.navbar_config?.brand} onChange={e => setSettings({...settings, navbar_config: {...settings.navbar_config, brand: e.target.value}})} />
+                            </div>
+                            <div className="form-group">
+                                <label>Logo URL</label>
+                                <input className="form-control" value={settings.navbar_config?.logo_url} onChange={e => setSettings({...settings, navbar_config: {...settings.navbar_config, logo_url: e.target.value}})} />
+                            </div>
+                            <div className="form-group">
+                                <label>Copyright Text</label>
+                                <input className="form-control" value={settings.footer_config?.copyright} onChange={e => setSettings({...settings, footer_config: {...settings.footer_config, copyright: e.target.value}})} />
+                            </div>
+                        </div>
+                        <div className="nav-group">
+                            <label className="nav-group-title" style={{ padding: 0 }}>Footer Details</label>
+                            <div className="form-group">
+                                <label>Footer About Text</label>
+                                <textarea className="form-control" rows="2" value={settings.footer_config?.about_text} onChange={e => setSettings({...settings, footer_config: {...settings.footer_config, about_text: e.target.value}})} />
+                            </div>
+                            <div className="form-group">
+                                <label>Footer Email</label>
+                                <input className="form-control" value={settings.footer_config?.contact?.email} onChange={e => setSettings({...settings, footer_config: {...settings.footer_config, contact: {...settings.footer_config.contact, email: e.target.value}}})} />
+                            </div>
+                            <div className="form-group">
+                                <label>Footer Phone</label>
+                                <input className="form-control" value={settings.footer_config?.contact?.phone} onChange={e => setSettings({...settings, footer_config: {...settings.footer_config, contact: {...settings.footer_config.contact, phone: e.target.value}}})} />
+                            </div>
+                            <div className="form-group">
+                                <label>Google Maps Embed URL</label>
+                                <input className="form-control" placeholder="https://www.google.com/maps/embed?..." value={settings.footer_config?.map_url} onChange={e => setSettings({...settings, footer_config: {...settings.footer_config, map_url: e.target.value}})} />
+                            </div>
+                        </div>
                     </div>
-                    <div className="form-group">
-                        <label>Logo URL</label>
-                        <input className="form-control" value={settings.navbar.logo_url} onChange={e => setSettings({...settings, navbar: {...settings.navbar, logo_url: e.target.value}})} placeholder="https://..." />
+
+                    <div className="nav-group" style={{ marginTop: '24px' }}>
+                        <label className="nav-group-title" style={{ padding: 0 }}>Quick Links</label>
+                        <div className="stats-grid" style={{ gridTemplateColumns: '1fr', gap: '12px' }}>
+                            {(settings.footer_config?.quick_links || []).map((link, idx) => (
+                                <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                    <input className="form-control" style={{ flex: 1 }} placeholder="Label (e.g. Home)" value={link.label} onChange={e => {
+                                        const newLinks = [...settings.footer_config.quick_links];
+                                        newLinks[idx].label = e.target.value;
+                                        setSettings({...settings, footer_config: {...settings.footer_config, quick_links: newLinks}});
+                                    }} />
+                                    <input className="form-control" style={{ flex: 2 }} placeholder="URL (e.g. /home)" value={link.url} onChange={e => {
+                                        const newLinks = [...settings.footer_config.quick_links];
+                                        newLinks[idx].url = e.target.value;
+                                        setSettings({...settings, footer_config: {...settings.footer_config, quick_links: newLinks}});
+                                    }} />
+                                    <button className="action-btn btn-danger" onClick={() => {
+                                        const newLinks = settings.footer_config.quick_links.filter((_, i) => i !== idx);
+                                        setSettings({...settings, footer_config: {...settings.footer_config, quick_links: newLinks}});
+                                    }}>🗑️</button>
+                                </div>
+                            ))}
+                            <button className="action-btn" style={{ width: 'fit-content' }} onClick={() => {
+                                const newLinks = [...(settings.footer_config.quick_links || []), { label: '', url: '' }];
+                                setSettings({...settings, footer_config: {...settings.footer_config, quick_links: newLinks}});
+                            }}>+ Add Link</button>
+                        </div>
                     </div>
-                    <button className="action-btn btn-primary" onClick={() => saveSettings('navbar_config', settings.navbar)}>Save Navbar</button>
+
+                    <div className="nav-group" style={{ marginTop: '24px' }}>
+                        <label className="nav-group-title" style={{ padding: 0 }}>Social Media Links</label>
+                        <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px' }}>
+                            <div className="form-group">
+                                <label>Facebook</label>
+                                <input className="form-control" value={settings.footer_config?.social?.facebook} onChange={e => setSettings({...settings, footer_config: {...settings.footer_config, social: {...settings.footer_config.social, facebook: e.target.value}}})} />
+                            </div>
+                            <div className="form-group">
+                                <label>Twitter</label>
+                                <input className="form-control" value={settings.footer_config?.social?.twitter} onChange={e => setSettings({...settings, footer_config: {...settings.footer_config, social: {...settings.footer_config.social, twitter: e.target.value}}})} />
+                            </div>
+                            <div className="form-group">
+                                <label>LinkedIn</label>
+                                <input className="form-control" value={settings.footer_config?.social?.linkedin} onChange={e => setSettings({...settings, footer_config: {...settings.footer_config, social: {...settings.footer_config.social, linkedin: e.target.value}}})} />
+                            </div>
+                            <div className="form-group">
+                                <label>Instagram</label>
+                                <input className="form-control" value={settings.footer_config?.social?.instagram} onChange={e => setSettings({...settings, footer_config: {...settings.footer_config, social: {...settings.footer_config.social, instagram: e.target.value}}})} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                        <button className="action-btn btn-primary" style={{ flex: 1 }} onClick={() => saveSettings('navbar_config', settings.navbar_config)}>Save Navbar Settings</button>
+                        <button className="action-btn btn-primary" style={{ flex: 1 }} onClick={() => saveSettings('footer_config', settings.footer_config)}>Save Footer Settings</button>
+                    </div>
                 </div>
 
-                {/* Footer General */}
+                {/* Contact Information */}
                 <div className="stat-card">
-                    <h3>Footer Content</h3>
-                    <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Footer Brand</label>
-                        <input className="form-control" value={settings.footer.brand} onChange={e => setSettings({...settings, footer: {...settings.footer, brand: e.target.value}})} />
+                    <h3 style={{ marginBottom: '24px' }}>Contact Details</h3>
+                    <div className="form-group">
+                        <label>Physical Address</label>
+                        <input className="form-control" value={settings.contact_info?.address} onChange={e => setSettings({...settings, contact_info: {...settings.contact_info, address: e.target.value}})} />
                     </div>
                     <div className="form-group">
-                        <label>About Text</label>
-                        <textarea className="form-control" rows="3" value={settings.footer.about_text} onChange={e => setSettings({...settings, footer: {...settings.footer, about_text: e.target.value}})} />
+                        <label>Support Email</label>
+                        <input className="form-control" value={settings.contact_info?.email} onChange={e => setSettings({...settings, contact_info: {...settings.contact_info, email: e.target.value}})} />
                     </div>
                     <div className="form-group">
-                        <label>Copyright Text</label>
-                        <input className="form-control" value={settings.footer.copyright} onChange={e => setSettings({...settings, footer: {...settings.footer, copyright: e.target.value}})} />
+                        <label>Phone Number</label>
+                        <input className="form-control" value={settings.contact_info?.phone} onChange={e => setSettings({...settings, contact_info: {...settings.contact_info, phone: e.target.value}})} />
                     </div>
+                    <button className="action-btn btn-primary" style={{ width: '100%' }} onClick={() => saveSettings('contact_info', settings.contact_info)}>Update Contact Info</button>
                 </div>
 
-                {/* Footer Contact */}
-                <div className="stat-card">
-                    <h3>Contact Information</h3>
-                    <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Email</label>
-                        <input className="form-control" value={settings.footer.contact?.email} onChange={e => setSettings({...settings, footer: {...settings.footer, contact: {...settings.footer.contact, email: e.target.value}}})} />
+                {/* About Information */}
+                <div className="stat-card" style={{ gridColumn: 'span 2' }}>
+                    <h3 style={{ marginBottom: '24px' }}>About Us Content</h3>
+                    <div className="form-group">
+                        <label>Section Title</label>
+                        <input className="form-control" value={settings.about_info?.title} onChange={e => setSettings({...settings, about_info: {...settings.about_info, title: e.target.value}})} />
                     </div>
                     <div className="form-group">
-                        <label>Phone</label>
-                        <input className="form-control" value={settings.footer.contact?.phone} onChange={e => setSettings({...settings, footer: {...settings.footer, contact: {...settings.footer.contact, phone: e.target.value}}})} />
+                        <label>About Description</label>
+                        <textarea className="form-control" rows="6" value={settings.about_info?.description} onChange={e => setSettings({...settings, about_info: {...settings.about_info, description: e.target.value}})} />
                     </div>
-                    <div className="form-group">
-                        <label>Address</label>
-                        <input className="form-control" value={settings.footer.contact?.address} onChange={e => setSettings({...settings, footer: {...settings.footer, contact: {...settings.footer.contact, address: e.target.value}}})} />
-                    </div>
+                    <button className="action-btn btn-primary" style={{ width: '100%' }} onClick={() => saveSettings('about_info', settings.about_info)}>Update About Content</button>
                 </div>
-
-                {/* Social Links */}
-                <div className="stat-card">
-                    <h3>Social Media Links</h3>
-                    <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Facebook</label>
-                        <input className="form-control" value={settings.footer.social?.facebook} onChange={e => setSettings({...settings, footer: {...settings.footer, social: {...settings.footer.social, facebook: e.target.value}}})} />
-                    </div>
-                    <div className="form-group">
-                        <label>Twitter</label>
-                        <input className="form-control" value={settings.footer.social?.twitter} onChange={e => setSettings({...settings, footer: {...settings.footer, social: {...settings.footer.social, twitter: e.target.value}}})} />
-                    </div>
-                    <div className="form-group">
-                        <label>Instagram</label>
-                        <input className="form-control" value={settings.footer.social?.instagram} onChange={e => setSettings({...settings, footer: {...settings.footer, social: {...settings.footer.social, instagram: e.target.value}}})} />
-                    </div>
-                </div>
-            </div>
-            
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                <button className="action-btn btn-primary" style={{ padding: '15px 30px' }} onClick={() => saveSettings('footer_config', settings.footer)}>Save All Footer Settings</button>
             </div>
         </div>
     );

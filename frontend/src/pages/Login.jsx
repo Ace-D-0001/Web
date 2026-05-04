@@ -9,18 +9,33 @@ const Login = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login, setToken } = useAuth();
+    const { user, login, setToken, loading: authLoading } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
+        if (!authLoading && user) {
+            const target = user.role === 'admin' ? '/admin-dashboard' : '/home';
+            navigate(target, { replace: true });
+            return;
+        }
         // Handle Google OAuth callback token
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
+        const urlError = urlParams.get('error');
+
         if (token) {
-            setToken(token).then(() => navigate('/'));
+            setToken(token).then((userData) => {
+                const target = userData?.role === 'admin' ? '/admin/dashboard' : '/home';
+                navigate(target);
+            });
             return;
         }
+
+        if (urlError) {
+            setError(urlError);
+        }
+
         // Show success message passed from other pages (e.g. after password reset)
         if (location.state?.message) {
             setSuccess(location.state.message);
@@ -35,7 +50,11 @@ const Login = () => {
         const result = await login(email, password);
 
         if (result.success) {
-            navigate('/');
+            if (result.user.role === 'admin') {
+                navigate('/admin/dashboard');
+            } else {
+                navigate('/home');
+            }
         } else {
             setError(result.message || 'Login failed. Please try again.');
             setLoading(false);

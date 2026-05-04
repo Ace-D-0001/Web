@@ -5,20 +5,26 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const storedAdmin = localStorage.getItem('isAdmin');
         const token = localStorage.getItem('token');
         
-        if (storedUser && token) {
-            setUser(JSON.parse(storedUser));
-            setIsAdmin(storedAdmin === 'true');
+        if (token) {
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            axios.get(`${import.meta.env.VITE_API_URL}/user`)
+                .then(response => {
+                    setUser(response.data);
+                })
+                .catch(() => {
+                    localStorage.removeItem('token');
+                    delete axios.defaults.headers.common['Authorization'];
+                    setUser(null);
+                })
+                .finally(() => setLoading(false));
+        } else {
+            setLoading(false);
         }
-        setLoading(false);
     }, []);
 
     const login = async (email, password) => {
@@ -27,13 +33,10 @@ export const AuthProvider = ({ children }) => {
             const { user, token } = response.data;
             
             setUser(user);
-            setIsAdmin(user.role === 'admin');
-            localStorage.setItem('user', JSON.stringify(user));
-            localStorage.setItem('isAdmin', user.role === 'admin' ? 'true' : 'false');
             localStorage.setItem('token', token);
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             
-            return { success: true };
+            return { success: true, user };
         } catch (error) {
             return { 
                 success: false, 
@@ -48,9 +51,6 @@ export const AuthProvider = ({ children }) => {
             const { user, token } = response.data;
             
             setUser(user);
-            setIsAdmin(true);
-            localStorage.setItem('user', JSON.stringify(user));
-            localStorage.setItem('isAdmin', 'true');
             localStorage.setItem('token', token);
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             
@@ -70,9 +70,6 @@ export const AuthProvider = ({ children }) => {
             console.error('Logout error:', error);
         } finally {
             setUser(null);
-            setIsAdmin(false);
-            localStorage.removeItem('user');
-            localStorage.removeItem('isAdmin');
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
         }
@@ -86,16 +83,14 @@ export const AuthProvider = ({ children }) => {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`);
             const user = response.data;
             setUser(user);
-            setIsAdmin(user.role === 'admin');
-            localStorage.setItem('user', JSON.stringify(user));
-            localStorage.setItem('isAdmin', user.role === 'admin' ? 'true' : 'false');
+            return user;
         } catch (error) {
             logout();
         }
     };
 
     return (
-        <AuthContext.Provider value={{ user, isAdmin, login, adminLogin, logout, loading, setToken }}>
+        <AuthContext.Provider value={{ user, login, adminLogin, logout, loading, setToken }}>
             {children}
         </AuthContext.Provider>
     );

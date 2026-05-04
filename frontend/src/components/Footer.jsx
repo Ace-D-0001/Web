@@ -8,7 +8,13 @@ const Footer = () => {
         about_text: 'Building the future of full-stack development with React and Laravel.',
         copyright: 'SynergyStack. All rights reserved.',
         contact: { email: 'info@synergystack.com', phone: '+1 (555) 000-0000', address: '123 Tech Avenue, CA' },
-        social: { facebook: '#', twitter: '#', linkedin: '#', instagram: '#' }
+        social: { facebook: '#', twitter: '#', linkedin: '#', instagram: '#' },
+        quick_links: [
+            { label: 'Home', url: '/' },
+            { label: 'Contact', url: '/contact' },
+            { label: 'Privacy Policy', url: '/privacy' }
+        ],
+        map_url: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3168.6282977645198!2d-122.0837484846922!3d37.42199987982519!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fba02425dad8f%3A0x6c296c66619367e0!2sGoogleplex!5e0!3m2!1sen!2sus!4v1634567890123!5m2!1sen!2sus"
     });
 
     useEffect(() => {
@@ -18,7 +24,13 @@ const Footer = () => {
     const fetchFooterSettings = async () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_API_URL}/settings/footer_config`);
-            if (res.data) setConfig(prev => ({ ...prev, ...res.data }));
+            if (res.data) setConfig(prev => ({ 
+                ...prev, 
+                ...res.data,
+                contact: { ...prev.contact, ...res.data.contact },
+                social: { ...prev.social, ...res.data.social },
+                quick_links: res.data.quick_links || prev.quick_links
+            }));
         } catch (err) {
             console.error('Footer config fetch failed');
         }
@@ -41,9 +53,9 @@ const Footer = () => {
                 <div className="footer-section links">
                     <h3 className="footer-title">Quick Links</h3>
                     <ul>
-                        <li><a href="/">Home</a></li>
-                        <li><a href="/contact">Contact</a></li>
-                        <li><a href="/privacy">Privacy Policy</a></li>
+                        {config.quick_links.map((link, idx) => (
+                            <li key={idx}><a href={link.url}>{link.label}</a></li>
+                        ))}
                     </ul>
                 </div>
 
@@ -57,15 +69,17 @@ const Footer = () => {
                 <div className="footer-section map">
                     <h3 className="footer-title">Our Location</h3>
                     <div className="map-wrapper">
-                        <iframe 
-                            title="Office Location"
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3168.6282977645198!2d-122.0837484846922!3d37.42199987982519!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fba02425dad8f%3A0x6c296c66619367e0!2sGoogleplex!5e0!3m2!1sen!2sus!4v1634567890123!5m2!1sen!2sus" 
-                            width="100%" 
-                            height="150" 
-                            style={{ border: 0, borderRadius: '8px' }} 
-                            allowFullScreen="" 
-                            loading="lazy"
-                        ></iframe>
+                        {config.map_url && (
+                            <iframe 
+                                title="Office Location"
+                                src={config.map_url}
+                                width="100%" 
+                                height="150" 
+                                style={{ border: 0, borderRadius: '8px' }} 
+                                allowFullScreen="" 
+                                loading="lazy"
+                            ></iframe>
+                        )}
                     </div>
                 </div>
             </div>

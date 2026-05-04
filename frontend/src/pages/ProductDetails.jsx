@@ -11,7 +11,9 @@ const ProductDetails = () => {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
+    const [quantity, setQuantity] = useState(1);
     const [submitting, setSubmitting] = useState(false);
+    const [activeTab, setActiveTab] = useState('inquiry'); // inquiry or order
 
     useEffect(() => {
         fetchProduct();
@@ -48,6 +50,30 @@ const ProductDetails = () => {
             setMessage('');
         } catch (err) {
             alert('Failed to send inquiry. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleOrder = async (e) => {
+        e.preventDefault();
+        if (!user) {
+            alert('Please login to place an order.');
+            navigate('/login');
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            await axios.post(`${import.meta.env.VITE_API_URL}/orders`, {
+                product_id: product.id,
+                quantity: quantity,
+                notes: message
+            });
+            alert('Order placed successfully! Redirecting to your orders...');
+            navigate('/orders');
+        } catch (err) {
+            alert('Failed to place order. Please try again.');
         } finally {
             setSubmitting(false);
         }
@@ -101,29 +127,71 @@ const ProductDetails = () => {
                     </div>
 
                     <div className="action-part" style={{ background: 'rgba(255,255,255,0.03)', padding: '30px', borderRadius: '12px' }}>
-                        <h2 className="section-title">Send Inquiry</h2>
-                        <form onSubmit={handleInquiry}>
-                            <div style={{ marginBottom: '15px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', color: '#94a3b8' }}>Your Message</label>
-                                <textarea 
-                                    className="form-control" 
-                                    style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', color: 'white', padding: '12px', borderRadius: '8px' }}
-                                    rows="5"
-                                    placeholder="Write your questions here..."
-                                    value={message}
-                                    onChange={(e) => setMessage(e.target.value)}
-                                    required
-                                />
-                            </div>
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
                             <button 
-                                type="submit" 
-                                className="order-btn" 
-                                disabled={submitting}
-                                style={{ width: '100%' }}
+                                onClick={() => setActiveTab('inquiry')} 
+                                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: activeTab === 'inquiry' ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
                             >
-                                {submitting ? 'Sending...' : 'Send Message to Admin'}
+                                Send Inquiry
                             </button>
-                        </form>
+                            <button 
+                                onClick={() => setActiveTab('order')} 
+                                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: activeTab === 'order' ? 'var(--success)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
+                            >
+                                Place Order
+                            </button>
+                        </div>
+
+                        {activeTab === 'inquiry' ? (
+                            <form onSubmit={handleInquiry} className="animate-fade-in">
+                                <h2 className="section-title">Send Inquiry</h2>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '8px', color: '#94a3b8' }}>Your Message</label>
+                                    <textarea 
+                                        className="form-control" 
+                                        style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', color: 'white', padding: '12px', borderRadius: '8px' }}
+                                        rows="5"
+                                        placeholder="Write your questions here..."
+                                        value={message}
+                                        onChange={(e) => setMessage(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <button type="submit" className="order-btn" disabled={submitting} style={{ width: '100%' }}>
+                                    {submitting ? 'Sending...' : 'Send Message to Admin'}
+                                </button>
+                            </form>
+                        ) : (
+                            <form onSubmit={handleOrder} className="animate-fade-in">
+                                <h2 className="section-title">Place Order Now</h2>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '8px', color: '#94a3b8' }}>Quantity</label>
+                                    <input 
+                                        type="number" 
+                                        min="1" 
+                                        className="form-control" 
+                                        style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', color: 'white', padding: '12px', borderRadius: '8px' }}
+                                        value={quantity}
+                                        onChange={(e) => setQuantity(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '8px', color: '#94a3b8' }}>Additional Notes (Optional)</label>
+                                    <textarea 
+                                        className="form-control" 
+                                        style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', color: 'white', padding: '12px', borderRadius: '8px' }}
+                                        rows="3"
+                                        placeholder="Any special requests..."
+                                        value={message}
+                                        onChange={(e) => setMessage(e.target.value)}
+                                    />
+                                </div>
+                                <button type="submit" className="order-btn" disabled={submitting} style={{ width: '100%', background: 'var(--success)' }}>
+                                    {submitting ? 'Processing...' : 'Place Order Now'}
+                                </button>
+                            </form>
+                        )}
                     </div>
                 </section>
             </div>

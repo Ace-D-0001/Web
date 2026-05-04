@@ -1,0 +1,228 @@
+.user-orders-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    color: var(--text-main);
+}
+
+.user-orders-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60vh;
+    font-size: 1.2rem;
+    color: var(--text-dim);
+}
+
+.user-orders-header {
+    margin-bottom: 2rem;
+}
+
+.user-orders-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-light);
+}
+
+.user-orders-header p {
+    color: var(--text-dim);
+}
+
+.no-orders {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.orders-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.order-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.order-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.order-card.active {
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.order-id {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.status-draft { background: rgba(156, 163, 175, 0.2); color: #9ca3af; }
+.status-assigned { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+.status-confirmed { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.status-completed { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+.status-cancelled { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+.order-body {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+}
+
+.order-total {
+    margin-top: 0.5rem;
+    font-weight: bold;
+    color: var(--text-main);
+}
+
+.action-required-notice {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+/* Details Pane */
+.order-details-pane {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 2rem;
+    min-height: 500px;
+}
+
+.select-prompt {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--text-dim);
+}
+
+.details-content h2 {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 1rem;
+}
+
+.detail-group {
+    margin-bottom: 2rem;
+}
+
+.detail-group label {
+    display: block;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.timeline li {
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.items-table th, .items-table td {
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+}
+
+.items-table th:last-child, .items-table td:last-child {
+    text-align: right;
+}
+
+.items-table tfoot th {
+    font-size: 1.2rem;
+    padding-top: 1rem;
+}
+
+.order-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 3rem;
+}
+
+.btn-confirm {
+    background: var(--success, #10b981);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 2;
+    transition: all 0.2s;
+}
+
+.btn-confirm:hover {
+    filter: brightness(1.1);
+}
+
+.btn-invoice {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.2s;
+}
+
+.btn-invoice:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 768px) {
+    .orders-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .order-actions {
+        flex-direction: column;
+    }
+}

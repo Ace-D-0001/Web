@@ -39,12 +39,28 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // User Orders
+    Route::get('/orders', [UserOrderController::class, 'index']);
+    Route::post('/orders', [UserOrderController::class, 'store']);
+    Route::get('/orders/{id}', [UserOrderController::class, 'show']);
+    Route::post('/orders/{id}/confirm', [UserOrderController::class, 'confirm']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
 });
 
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\InquiryController;
 use App\Http\Controllers\Api\SiteSettingController;
+use App\Http\Controllers\Api\TeamMemberController;
+use App\Http\Controllers\Api\AdminOrderController;
+use App\Http\Controllers\Api\UserOrderController;
+use App\Http\Controllers\Api\NotificationController;
 
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
     // User Management
@@ -57,6 +73,9 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('/products', ProductController::class);
     Route::post('/products/{id}/toggle-pause', [ProductController::class, 'togglePause']);
 
+    // Team Management
+    Route::apiResource('/team', TeamMemberController::class);
+
     // Inquiries (Messages)
     Route::get('/inquiries', [InquiryController::class, 'index']);
     Route::delete('/inquiries/{id}', [InquiryController::class, 'destroy']);
@@ -64,9 +83,19 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // Site Settings (Navbar/Footer)
     Route::get('/settings', [SiteSettingController::class, 'all']);
     Route::post('/settings/{key}', [SiteSettingController::class, 'set']);
+
+    // Admin Orders
+    Route::get('/orders', [AdminOrderController::class, 'index']);
+    Route::post('/orders', [AdminOrderController::class, 'store']);
+    Route::get('/orders/{id}', [AdminOrderController::class, 'show']);
+    Route::put('/orders/{id}', [AdminOrderController::class, 'update']);
+    Route::post('/orders/{id}/assign', [AdminOrderController::class, 'assign']);
+    Route::post('/orders/{id}/complete', [AdminOrderController::class, 'complete']);
+    Route::post('/orders/{id}/cancel', [AdminOrderController::class, 'cancel']);
 });
 
 // Public routes for inquiries and product viewing
 Route::get('/products', [ProductController::class, 'index']);
+Route::get('/team', [TeamMemberController::class, 'index']);
 Route::post('/inquiries', [InquiryController::class, 'store']);
 Route::get('/settings/{key}', [SiteSettingController::class, 'get']);
