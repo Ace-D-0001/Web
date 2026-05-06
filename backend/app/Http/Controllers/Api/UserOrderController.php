@@ -12,18 +12,23 @@ use Illuminate\Support\Facades\DB;
 
 class UserOrderController extends Controller
 {
-    private function userOrders()
+    private function getUserOrders(Request $request)
     {
-        $userId = auth('sanctum')->id();
+        $user = $request->user();
         
+        // Return an empty query if no user is found
+        if (!$user) {
+            return Order::where('id', 0);
+        }
+
         // Users can never see drafts, and only see their own orders
-        return Order::where('user_id', $userId)
+        return Order::where('user_id', $user->id)
                     ->where('status', '!=', 'draft');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $orders = $this->userOrders()
+        $orders = $this->getUserOrders($request)
             ->with('items')
             ->orderBy('created_at', 'desc')
             ->get();
