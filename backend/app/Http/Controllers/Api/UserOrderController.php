@@ -14,14 +14,20 @@ class UserOrderController extends Controller
 {
     private function userOrders()
     {
+        $userId = auth('sanctum')->id();
+        
         // Users can never see drafts, and only see their own orders
-        return Order::where('user_id', auth()->id())
+        return Order::where('user_id', $userId)
                     ->where('status', '!=', 'draft');
     }
 
     public function index()
     {
-        $orders = $this->userOrders()->orderBy('created_at', 'desc')->get();
+        $orders = $this->userOrders()
+            ->with('items')
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
         return response()->json($orders);
     }
 

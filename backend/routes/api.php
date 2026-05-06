@@ -2,9 +2,18 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\InquiryController;
+use App\Http\Controllers\Api\SiteSettingController;
+use App\Http\Controllers\Api\TeamMemberController;
+use App\Http\Controllers\Api\AdminOrderController;
+use App\Http\Controllers\Api\UserOrderController;
+use App\Http\Controllers\Api\NotificationController;
 
+/* --- Status Route --- */
 Route::get('/status', function () {
     try {
         DB::connection()->getPdo();
@@ -20,8 +29,7 @@ Route::get('/status', function () {
     ]);
 });
 
-use App\Http\Controllers\Api\AuthController;
-
+/* --- Auth Routes --- */
 Route::post('/signup', [AuthController::class, 'signup']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/set-password', [AuthController::class, 'setPassword']);
@@ -34,6 +42,7 @@ Route::post('/admin/login', [AuthController::class, 'adminLogin']);
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
+/* --- Authenticated Routes --- */
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
@@ -53,15 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
 });
 
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\InquiryController;
-use App\Http\Controllers\Api\SiteSettingController;
-use App\Http\Controllers\Api\TeamMemberController;
-use App\Http\Controllers\Api\AdminOrderController;
-use App\Http\Controllers\Api\UserOrderController;
-use App\Http\Controllers\Api\NotificationController;
-
+/* --- Admin Routes --- */
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
     // User Management
     Route::get('/users', [UserController::class, 'index']);
@@ -94,7 +95,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/orders/{id}/cancel', [AdminOrderController::class, 'cancel']);
 });
 
-// Public routes for inquiries and product viewing
+/* --- Public Content Routes --- */
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/team', [TeamMemberController::class, 'index']);
 Route::post('/inquiries', [InquiryController::class, 'store']);

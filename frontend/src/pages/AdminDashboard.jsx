@@ -633,7 +633,7 @@ const CardsSection = () => {
             <div className="cards-grid">
                 {products.map(p => (
                     <div key={p.id} className={`admin-product-card ${p.is_paused ? 'paused-overlay' : ''}`}>
-                        <img src={p.image_url || 'https://via.placeholder.com/300x180?text=No+Image'} className="card-img-preview" />
+                        <img src={p.image_url || '/assets/no-image.png'} className="card-img-preview" alt={p.title} />
                         <div className="card-body">
                             <h3>{p.title}</h3>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -699,7 +699,12 @@ const CardsSection = () => {
 
                             <div className="form-group">
                                 <label>Specifications (One per line)</label>
-                                <textarea className="form-control" rows="3" placeholder="Hotel accommodation&#10;Flight included&#10;Visa processing" value={currentCard.specs} onChange={e => setCurrentCard({...currentCard, specs: e.target.value})} />
+                                <textarea className="form-control" rows="3" placeholder="Hardware encryption&#10;Cloud sync ready&#10;24/7 Support" value={currentCard.specs} onChange={e => setCurrentCard({...currentCard, specs: e.target.value})} />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Gallery Image URLs (Comma separated)</label>
+                                <textarea className="form-control" rows="2" placeholder="https://image1.jpg, https://image2.jpg" value={currentCard.gallery} onChange={e => setCurrentCard({...currentCard, gallery: e.target.value})} />
                             </div>
 
                             <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>

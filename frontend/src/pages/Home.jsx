@@ -47,7 +47,7 @@ const Home = () => {
                                         id={p.id}
                                         title={p.title} 
                                         description={p.description}
-                                        image={p.image_url || 'https://via.placeholder.com/300'}
+                                        image={p.image_url || '/assets/no-image.png'}
                                     />
                                 ))
                             ) : (
