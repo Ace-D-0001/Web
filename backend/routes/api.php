@@ -18,13 +18,16 @@ Route::get('/status', function () {
     try {
         DB::connection()->getPdo();
         $db = true;
+        $error = null;
     } catch (\Exception $e) {
         $db = false;
+        $error = $e->getMessage();
     }
     
     return response()->json([
         'status' => 'online',
         'database' => $db,
+        'db_error' => $error,
         'version' => '1.0.0'
     ]);
 });
