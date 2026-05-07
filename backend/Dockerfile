@@ -38,4 +38,4 @@ RUN composer install --no-dev --optimize-autoloader
 EXPOSE 80
 
 # Command to run
-CMD php artisan config:clear && php artisan migrate --force && php artisan db:seed --force && apache2-foreground
+CMD php artisan config:clear && php artisan migrate --force && apache2-foreground
