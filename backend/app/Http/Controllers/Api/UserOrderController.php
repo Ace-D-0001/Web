@@ -69,7 +69,7 @@ class UserOrderController extends Controller
                     'type' => 'new_order_placed',
                     'data' => [
                         'order_id' => $order->id,
-                        'message' => auth()->user()->name . ' has placed a new order #' . $order->id
+                        'message' => (auth()->user()->name ?? 'A user') . ' has placed a new order #' . $order->id
                     ]
                 ]);
             }
@@ -108,8 +108,8 @@ class UserOrderController extends Controller
                     'type' => 'order_confirmed',
                     'data' => [
                         'order_id' => $order->id,
-                        'user_name' => auth()->user()->name,
-                        'message' => auth()->user()->name . ' has confirmed order #' . $order->id
+                        'user_name' => auth()->user()->name ?? 'User',
+                        'message' => (auth()->user()->name ?? 'User') . ' has confirmed order #' . $order->id
                     ]
                 ]);
             }
