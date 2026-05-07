@@ -18,16 +18,13 @@ Route::get('/status', function () {
     try {
         DB::connection()->getPdo();
         $db = true;
-        $error = null;
     } catch (\Exception $e) {
         $db = false;
-        $error = $e->getMessage();
     }
     
     return response()->json([
         'status' => 'online',
         'database' => $db,
-        'db_error' => $error,
         'version' => '1.0.0'
     ]);
 });
@@ -104,12 +101,4 @@ Route::get('/team', [TeamMemberController::class, 'index']);
 Route::post('/inquiries', [InquiryController::class, 'store']);
 Route::get('/settings/{key}', [SiteSettingController::class, 'get']);
 
-/* --- Secret Seeder Route (Temporary) --- */
-Route::get('/run-seeder', function () {
-    try {
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-        return response()->json(['message' => 'Database seeded successfully!', 'output' => \Illuminate\Support\Facades\Artisan::output()]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-});
+
