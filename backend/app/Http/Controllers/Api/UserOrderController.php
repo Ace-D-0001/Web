@@ -80,13 +80,13 @@ class UserOrderController extends Controller
 
     public function show($id)
     {
-        $order = $this->userOrders()->with('items')->findOrFail($id);
+        $order = $this->getUserOrders(request())->with('items')->findOrFail($id);
         return response()->json($order);
     }
 
     public function confirm($id)
     {
-        $order = $this->userOrders()->findOrFail($id);
+        $order = $this->getUserOrders(request())->findOrFail($id);
         
         if ($order->status !== 'assigned') {
             return response()->json(['message' => 'Order is already confirmed or processed.'], 400);
