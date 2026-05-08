@@ -67,6 +67,7 @@ const AdminLogin = () => {
                 </form>
 
                 <div className="auth-links">
+                    <Link to="/forgot-password">Forgot Password?</Link>
                     <Link to="/login">User Login</Link>
                 </div>
             </div>
