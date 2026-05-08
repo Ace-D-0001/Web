@@ -50,11 +50,11 @@ const AdminDashboard = () => {
 
     return (
         <div className="admin-layout">
-            <button className="mobile-toggle" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-                {isSidebarOpen ? '✕' : '☰'}
+            <button className={`mobile-toggle ${isSidebarOpen ? 'active' : ''}`} onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+                <span className="toggle-icon">{isSidebarOpen ? '✕' : '☰'}</span>
             </button>
             
-            {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />}
+            <div className={`sidebar-overlay ${isSidebarOpen ? 'active' : ''}`} onClick={() => setIsSidebarOpen(false)} />
 
             <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-logo">AdminPanel</div>
@@ -258,7 +258,7 @@ const OrdersSection = () => {
                 </button>
             </header>
 
-            <div className="data-card" style={{ overflowX: 'auto' }}>
+            <div className="data-card">
                 <div style={{ padding: '1.5rem', marginBottom: '0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         {['all', 'draft', 'assigned', 'confirmed', 'completed', 'cancelled'].map(f => (
@@ -278,7 +278,7 @@ const OrdersSection = () => {
                         ))}
                     </div>
                     
-                    <div className="search-box" style={{ flex: 1, maxWidth: '300px' }}>
+                    <div className="search-box" style={{ flex: 1, minWidth: '200px', maxWidth: '300px' }}>
                         <input 
                             type="text" 
                             className="form-control" 
@@ -290,7 +290,8 @@ const OrdersSection = () => {
                     </div>
                 </div>
 
-                <table className="admin-table">
+                <div className="table-responsive">
+                    <table className="admin-table">
                     <thead>
                         <tr>
                             <th>#ID</th>
@@ -332,6 +333,7 @@ const OrdersSection = () => {
                         ))}
                     </tbody>
                 </table>
+                </div>
             </div>
 
             {/* Create Draft Modal */}
@@ -514,50 +516,52 @@ const UsersSection = () => {
                 <h1>User Management</h1>
             </header>
             <div className="data-card">
-                <table className="admin-table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Joined</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map(u => (
-                            <tr key={u.id}>
-                                <td>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <img src={u.avatar || `https://ui-avatars.com/api/?name=${u.name}&background=6366f1&color=fff`} className="table-avatar" />
-                                        <span style={{ fontWeight: 600 }}>{u.name}</span>
-                                    </div>
-                                </td>
-                                <td style={{ color: 'var(--text-dim)' }}>{u.email}</td>
-                                <td>
-                                    <button 
-                                        className={`badge badge-admin`} 
-                                        onClick={() => toggleRole(u.id, u.role)}
-                                        style={{ cursor: 'pointer', border: 'none' }}
-                                        title="Click to toggle role"
-                                    >
-                                        {u.role}
-                                    </button>
-                                </td>
-                                <td><span className={`badge badge-${u.status}`}>{u.status}</span></td>
-                                <td style={{ color: 'var(--text-dim)' }}>{new Date(u.created_at).toLocaleDateString()}</td>
-                                <td>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button className="action-btn" onClick={() => updateStatus(u.id, 'active')} title="Approve">✅</button>
-                                        <button className="action-btn" onClick={() => updateStatus(u.id, 'pending')} title="Set Pending">⏳</button>
-                                        <button className="action-btn btn-danger" onClick={() => deleteUser(u.id)} title="Delete">🗑️</button>
-                                    </div>
-                                </td>
+                <div className="table-responsive">
+                    <table className="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {users.map(u => (
+                                <tr key={u.id}>
+                                    <td>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <img src={u.avatar || `https://ui-avatars.com/api/?name=${u.name}&background=6366f1&color=fff`} className="table-avatar" />
+                                            <span style={{ fontWeight: 600 }}>{u.name}</span>
+                                        </div>
+                                    </td>
+                                    <td style={{ color: 'var(--text-dim)' }}>{u.email}</td>
+                                    <td>
+                                        <button 
+                                            className={`badge badge-admin`} 
+                                            onClick={() => toggleRole(u.id, u.role)}
+                                            style={{ cursor: 'pointer', border: 'none' }}
+                                            title="Click to toggle role"
+                                        >
+                                            {u.role}
+                                        </button>
+                                    </td>
+                                    <td><span className={`badge badge-${u.status}`}>{u.status}</span></td>
+                                    <td style={{ color: 'var(--text-dim)' }}>{new Date(u.created_at).toLocaleDateString()}</td>
+                                    <td>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button className="action-btn" onClick={() => updateStatus(u.id, 'active')} title="Approve">✅</button>
+                                            <button className="action-btn" onClick={() => updateStatus(u.id, 'pending')} title="Set Pending">⏳</button>
+                                            <button className="action-btn btn-danger" onClick={() => deleteUser(u.id)} title="Delete">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
@@ -769,36 +773,38 @@ const TeamSection = () => {
             </header>
 
             <div className="data-card">
-                <table className="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Member</th>
-                            <th>Position</th>
-                            <th>Gmail</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {team.map(m => (
-                            <tr key={m.id}>
-                                <td>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <img src={m.image_url || `https://ui-avatars.com/api/?name=${m.name}`} className="table-avatar" />
-                                        <span style={{ fontWeight: 600 }}>{m.name}</span>
-                                    </div>
-                                </td>
-                                <td>{m.position}</td>
-                                <td style={{ color: 'var(--text-dim)' }}>{m.email}</td>
-                                <td>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button className="action-btn" onClick={() => { setCurrentMember(m); setShowModal(true); }}>Edit</button>
-                                        <button className="action-btn btn-danger" onClick={() => deleteMember(m.id)}>🗑️</button>
-                                    </div>
-                                </td>
+                <div className="table-responsive">
+                    <table className="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Position</th>
+                                <th>Gmail</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {team.map(m => (
+                                <tr key={m.id}>
+                                    <td>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <img src={m.image_url || `https://ui-avatars.com/api/?name=${m.name}`} className="table-avatar" />
+                                            <span style={{ fontWeight: 600 }}>{m.name}</span>
+                                        </div>
+                                    </td>
+                                    <td>{m.position}</td>
+                                    <td style={{ color: 'var(--text-dim)' }}>{m.email}</td>
+                                    <td>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button className="action-btn" onClick={() => { setCurrentMember(m); setShowModal(true); }}>Edit</button>
+                                            <button className="action-btn btn-danger" onClick={() => deleteMember(m.id)}>🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {showModal && (
