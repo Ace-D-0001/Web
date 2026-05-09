@@ -11,7 +11,16 @@ const UserOrders = () => {
 
     useEffect(() => {
         fetchOrders();
+        markNotificationsAsRead();
     }, []);
+
+    const markNotificationsAsRead = async () => {
+        try {
+            await axios.post(`${import.meta.env.VITE_API_URL}/notifications/read-all`);
+        } catch (error) {
+            console.error("Failed to mark notifications as read", error);
+        }
+    };
 
     const fetchOrders = async () => {
         try {

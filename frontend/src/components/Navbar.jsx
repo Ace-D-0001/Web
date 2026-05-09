@@ -14,6 +14,10 @@ const Navbar = () => {
     useEffect(() => {
         fetchNavbarSettings();
         fetchNotifications();
+        
+        // Auto-refresh notifications every 30 seconds
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
     }, [user]);
 
     const fetchNotifications = async () => {
