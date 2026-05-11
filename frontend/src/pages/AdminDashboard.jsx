@@ -589,42 +589,21 @@ const CardsSection = () => {
     const handleSave = async (e) => {
         e.preventDefault();
         try {
-            const formData = new FormData();
-            formData.append('title', currentCard.title);
-            formData.append('price', currentCard.price);
-            formData.append('description', currentCard.description);
-            
-            if (currentCard.image_file) {
-                formData.append('image', currentCard.image_file);
-            } else {
-                formData.append('image_url', currentCard.image_url);
-            }
-
-            const gallery = typeof currentCard.gallery === 'string' 
-                ? currentCard.gallery.split(',').map(s => s.trim()).filter(s => s) 
-                : currentCard.gallery;
-            formData.append('gallery', JSON.stringify(gallery));
-
-            const specs = typeof currentCard.specs === 'string' 
-                ? currentCard.specs.split('\n').map(s => s.trim()).filter(s => s) 
-                : currentCard.specs;
-            formData.append('specs', JSON.stringify(specs));
+            const payload = {
+                ...currentCard,
+                gallery: typeof currentCard.gallery === 'string' ? currentCard.gallery.split(',').map(s => s.trim()).filter(s => s) : currentCard.gallery,
+                specs: typeof currentCard.specs === 'string' ? currentCard.specs.split('\n').map(s => s.trim()).filter(s => s) : currentCard.specs
+            };
 
             if (currentCard.id) {
-                // Laravel doesn't handle FormData well with PUT, so we use POST with _method spoofing
-                formData.append('_method', 'PUT');
-                await axios.post(`${import.meta.env.VITE_API_URL}/admin/products/${currentCard.id}`, formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await axios.put(`${import.meta.env.VITE_API_URL}/admin/products/${currentCard.id}`, payload);
             } else {
-                await axios.post(`${import.meta.env.VITE_API_URL}/admin/products`, formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await axios.post(`${import.meta.env.VITE_API_URL}/admin/products`, payload);
             }
             setShowModal(false);
             fetchCards();
         } catch (err) {
-            alert('Failed to save. Check your data and image file.');
+            alert('Failed to save. Check your data.');
         }
     };
 
@@ -706,22 +685,14 @@ const CardsSection = () => {
                             </div>
                             
                             <div className="form-group">
-                                <label>Service Image (Upload file or paste URL)</label>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <input 
-                                        type="file" 
-                                        className="form-control" 
-                                        accept="image/*"
-                                        onChange={e => setCurrentCard({...currentCard, image_file: e.target.files[0], image_url: URL.createObjectURL(e.target.files[0])})} 
-                                    />
-                                    <div style={{ display: 'flex', gap: '12px' }}>
-                                        <input className="form-control" style={{ flex: 1 }} placeholder="OR paste URL: https://images.unsplash.com/..." value={currentCard.image_url} onChange={e => setCurrentCard({...currentCard, image_url: e.target.value, image_file: null})} />
-                                        {currentCard.image_url && (
-                                            <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
-                                                <img src={currentCard.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            </div>
-                                        )}
-                                    </div>
+                                <label>Image URL</label>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <input className="form-control" style={{ flex: 1 }} placeholder="https://images.unsplash.com/..." value={currentCard.image_url} onChange={e => setCurrentCard({...currentCard, image_url: e.target.value})} />
+                                    {currentCard.image_url && (
+                                        <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                                            <img src={currentCard.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -764,32 +735,18 @@ const TeamSection = () => {
         setTeam(res.data);
     };
 
+    const handleSave = async (e) => {
+        e.preventDefault();
         try {
-            const formData = new FormData();
-            formData.append('name', currentMember.name);
-            formData.append('position', currentMember.position);
-            formData.append('email', currentMember.email);
-            
-            if (currentMember.image_file) {
-                formData.append('image', currentMember.image_file);
-            } else {
-                formData.append('image_url', currentMember.image_url);
-            }
-
             if (currentMember.id) {
-                formData.append('_method', 'PUT');
-                await axios.post(`${import.meta.env.VITE_API_URL}/admin/team/${currentMember.id}`, formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await axios.put(`${import.meta.env.VITE_API_URL}/admin/team/${currentMember.id}`, currentMember);
             } else {
-                await axios.post(`${import.meta.env.VITE_API_URL}/admin/team`, formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await axios.post(`${import.meta.env.VITE_API_URL}/admin/team`, currentMember);
             }
             setShowModal(false);
             fetchTeam();
         } catch (err) {
-            alert('Failed to save team member. Please check the image format.');
+            alert('Failed to save team member.');
         }
     };
 
@@ -868,23 +825,8 @@ const TeamSection = () => {
                                 <input className="form-control" type="email" value={currentMember.email} onChange={e => setCurrentMember({...currentMember, email: e.target.value})} />
                             </div>
                             <div className="form-group">
-                                <label>Profile Image (Upload file or paste URL)</label>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <input 
-                                        type="file" 
-                                        className="form-control" 
-                                        accept="image/*"
-                                        onChange={e => setCurrentMember({...currentMember, image_file: e.target.files[0], image_url: URL.createObjectURL(e.target.files[0])})} 
-                                    />
-                                    <div style={{ display: 'flex', gap: '12px' }}>
-                                        <input className="form-control" style={{ flex: 1 }} placeholder="OR paste URL: https://..." value={currentMember.image_url} onChange={e => setCurrentMember({...currentMember, image_url: e.target.value, image_file: null})} />
-                                        {currentMember.image_url && (
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border)' }}>
-                                                <img src={currentMember.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                                <label>Profile Image URL</label>
+                                <input className="form-control" value={currentMember.image_url} onChange={e => setCurrentMember({...currentMember, image_url: e.target.value})} />
                             </div>
                             <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
                                 <button type="submit" className="action-btn btn-primary" style={{ flex: 1 }}>Save Member</button>

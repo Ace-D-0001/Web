@@ -19,14 +19,8 @@ class TeamMemberController extends Controller
             'name' => 'required|string',
             'position' => 'required|string',
             'email' => 'nullable|email',
-            'image_url' => 'nullable|string',
-            'image' => 'nullable|image|max:5120'
+            'image_url' => 'nullable|string'
         ]);
-
-        if ($request->hasFile('image')) {
-            $url = \App\Services\CloudinaryService::upload($request->file('image'));
-            if ($url) $validated['image_url'] = $url;
-        }
 
         $member = TeamMember::create($validated);
         return response()->json($member);
@@ -40,14 +34,8 @@ class TeamMemberController extends Controller
             'name' => 'string',
             'position' => 'string',
             'email' => 'nullable|email',
-            'image_url' => 'nullable|string',
-            'image' => 'nullable|image|max:5120'
+            'image_url' => 'nullable|string'
         ]);
-
-        if ($request->hasFile('image')) {
-            $url = \App\Services\CloudinaryService::upload($request->file('image'));
-            if ($url) $validated['image_url'] = $url;
-        }
 
         $member->update($validated);
         return response()->json($member);
