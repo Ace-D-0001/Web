@@ -15,6 +15,14 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        // Handle JSON strings from FormData
+        if (is_string($request->gallery)) {
+            $request->merge(['gallery' => json_decode($request->gallery, true)]);
+        }
+        if (is_string($request->specs)) {
+            $request->merge(['specs' => json_decode($request->specs, true)]);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'price' => 'nullable|string|max:255',
@@ -39,6 +47,14 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
         
+        // Handle JSON strings from FormData
+        if ($request->has('gallery') && is_string($request->gallery)) {
+            $request->merge(['gallery' => json_decode($request->gallery, true)]);
+        }
+        if ($request->has('specs') && is_string($request->specs)) {
+            $request->merge(['specs' => json_decode($request->specs, true)]);
+        }
+
         $validated = $request->validate([
             'title' => 'string|max:255',
             'price' => 'nullable|string|max:255',
